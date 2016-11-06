@@ -47,4 +47,4 @@ tags
 *.test
 
 # Binary
-mainflux
+mainflux-core
