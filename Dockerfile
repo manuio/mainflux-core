@@ -20,8 +20,8 @@ RUN apk update && apk add git && apk add wget && rm -rf /var/cache/apk/*
 # Copy the local package files to the container's workspace.
 ADD . /go/src/github.com/mainflux/mainflux-core
 
-RUN mkdir -p /etc/mainflux
-COPY config/config-docker.toml /etc/mainflux/config.toml
+RUN mkdir -p /etc/mainflux/core
+COPY config/config-docker.toml /etc/mainflux/core/config.toml
 
 # Get and install the dependencies
 RUN go get github.com/mainflux/mainflux-core
@@ -34,5 +34,5 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
 ###
 # Run main command with dockerize
 ###
-CMD dockerize -wait tcp://$MONGO_HOST:$MONGO_PORT -wait tcp://$EMQTTD_HOST:$EMQTTD_PORT -timeout 10s /go/bin/mainflux /etc/mainflux/config.toml
+CMD dockerize -wait tcp://$MONGO_HOST:$MONGO_PORT -wait tcp://$EMQTTD_HOST:$EMQTTD_PORT -timeout 10s /go/bin/mainflux-core /etc/mainflux/core/config.toml
 
