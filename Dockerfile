@@ -18,13 +18,13 @@ ENV EMQTTD_PORT 1883
 RUN apk update && apk add git && apk add wget && rm -rf /var/cache/apk/*
 
 # Copy the local package files to the container's workspace.
-ADD . /go/src/github.com/mainflux/mainflux
+ADD . /go/src/github.com/mainflux/mainflux-core
 
 RUN mkdir -p /etc/mainflux
 COPY config/config-docker.toml /etc/mainflux/config.toml
 
 # Get and install the dependencies
-RUN go get github.com/mainflux/mainflux
+RUN go get github.com/mainflux/mainflux-core
 
 # Dockerize
 ENV DOCKERIZE_VERSION v0.2.0

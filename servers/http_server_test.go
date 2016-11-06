@@ -16,9 +16,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/mainflux/mainflux/config"
-	"github.com/mainflux/mainflux/controllers"
-	mfdb "github.com/mainflux/mainflux/db"
+	"github.com/mainflux/mainflux-core/config"
+	"github.com/mainflux/mainflux-core/controllers"
+	mfdb "github.com/mainflux/mainflux-core/db"
 
 	"github.com/ory-am/dockertest"
 	"gopkg.in/mgo.v2"

@@ -1,4 +1,4 @@
-![gophersBanner](https://github.com/mainflux/mainflux-doc/blob/master/img/gopherBanner.jpg)
+![gophersBanner](https://github.com/mainflux/mainflux-core-doc/blob/master/img/gopherBanner.jpg)
 
 # Mainflux
 
@@ -8,7 +8,7 @@
 [![Join the chat at https://gitter.im/Mainflux/mainflux](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Mainflux/mainflux?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ### About
-Mainflux is modern [highly-secured](https://github.com/mainflux/mainflux-auth-server) open source and patent-free IoT cloud platform written in Go.
+Mainflux is modern [highly-secured](https://github.com/mainflux/mainflux-core-auth-server) open source and patent-free IoT cloud platform written in Go.
 
 It allows device, user and application connections over various network protocols, like HTTP, MQTT, WebSocket and CoAP, making a seamless bridge between them. It is used as the IoT middleware for building complex IoT solutions.
 
@@ -17,7 +17,7 @@ It allows device, user and application connections over various network protocol
 Mainflux is built with <3 by Mainflux [team](MAINTAINERS) and community contributors.
 
 ### Security
-For professional deployments Mainflux is usually combined with [Mainflux Authentication and Authorization Server](https://github.com/mainflux/mainflux-auth-server) which adds fine-grained security based on customizable API keys.
+For professional deployments Mainflux is usually combined with [Mainflux Authentication and Authorization Server](https://github.com/mainflux/mainflux-core-auth-server) which adds fine-grained security based on customizable API keys.
 
 Mainflux Auth Server also provides user accounts and device and application access control with simple customizable scheme based on scoped JWTs.
 
@@ -28,11 +28,11 @@ Mainflux uses [MongoDB](https://www.mongodb.com/), so insure that it is installe
 
 Installing Mainflux is trivial [`go get`](https://golang.org/cmd/go/):
 ```bash
-go get github.com/mainflux/mainflux
+go get github.com/mainflux/mainflux-core
 $GOBIN/mainflux
 ```
 
-If you are new to Go, more information about setting-up environment and fetching Mainflux code can be found [here](https://github.com/mainflux/mainflux-doc/blob/master/goenv.md).
+If you are new to Go, more information about setting-up environment and fetching Mainflux code can be found [here](https://github.com/mainflux/mainflux-core-doc/blob/master/goenv.md).
 
 ### Docker
 Running Mainflux in a Docker is even easier, as it will launch whole composition of microservices, so you do not have to care about dependencies.
@@ -51,8 +51,8 @@ This will automatically download Docker images from [Mainflux Docker Hub](https:
 
 ### System Architecture
 Mainflux IoT cloud is composed of several components, i.e. microservices:
-- [Mainflux Core (HTTP API Server and Admin)](https://github.com/mainflux/mainflux)
-- [Authentication and Authorization Server](https://github.com/mainflux/mainflux-auth-server)
+- [Mainflux Core (HTTP API Server and Admin)](https://github.com/mainflux/mainflux-core)
+- [Authentication and Authorization Server](https://github.com/mainflux/mainflux-core-auth-server)
 - [MQTT PUB/SUB Broker (with WebSocket and CoAP support)](https://github.com/mainflux/emqttd-docker)
 - Mongo Database
 - [Dashflux UI](https://github.com/mainflux/dashflux)
@@ -66,7 +66,7 @@ An extensive (and incomplete) list of features includes:
 - SDK - set of client libraries for many HW platforms in several programming languages: C/C++, JavaScript, Go and Python
 - Device management and provisioning and OTA FW updates
 - Highly secured connections via TLS and DTLS
-- Enhanced and fine-grained security via deployment-ready [Mainflux Authentication and Authorization Server](https://github.com/mainflux/mainflux-auth-server) with Access Control scheme based on customizable API keys and scoped JWT
+- Enhanced and fine-grained security via deployment-ready [Mainflux Authentication and Authorization Server](https://github.com/mainflux/mainflux-core-auth-server) with Access Control scheme based on customizable API keys and scoped JWT
 - Easy deployment and high system scalability via [Docker](https://www.docker.com/) images
 - Clear project roadmap, extensive development ecosystem and highly skilled developer community
 - And many more

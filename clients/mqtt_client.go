@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mainflux/mainflux/config"
-	"github.com/mainflux/mainflux/db"
-	"github.com/mainflux/mainflux/models"
+	"github.com/mainflux/mainflux-core/config"
+	"github.com/mainflux/mainflux-core/db"
+	"github.com/mainflux/mainflux-core/models"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/krylovsk/gosenml"

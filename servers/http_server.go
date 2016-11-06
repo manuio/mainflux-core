@@ -12,8 +12,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/mainflux/mainflux/config"
-	"github.com/mainflux/mainflux/controllers"
+	"github.com/mainflux/mainflux-core/config"
+	"github.com/mainflux/mainflux-core/controllers"
 
 	"github.com/go-zoo/bone"
 )

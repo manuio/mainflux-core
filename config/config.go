@@ -47,7 +47,7 @@ func (cfg *Config) Parse() {
 		confFile = os.Args[1]
 	} else {
 		// default cfg path to source dir, as we keep cfg.yml there
-		confFile = os.Getenv("GOPATH") + "/src/github.com/mainflux/mainflux/config/config.toml"
+		confFile = os.Getenv("GOPATH") + "/src/github.com/mainflux/mainflux-core/config/config.toml"
 	}
 
 	if _, err := toml.DecodeFile(confFile, &cfg); err != nil {
