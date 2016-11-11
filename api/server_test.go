@@ -17,7 +17,6 @@ import (
 	"time"
 
 	"github.com/mainflux/mainflux-core/config"
-	"github.com/mainflux/mainflux-core/controllers"
 	mfdb "github.com/mainflux/mainflux-core/db"
 
 	"github.com/ory-am/dockertest"
@@ -83,7 +82,7 @@ func TestServer(t *testing.T) {
 
 	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
 	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(controllers.GetStatus)
+	handler := http.HandlerFunc(getStatus)
 
 	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
 	// directly and pass in our Request and ResponseRecorder.
