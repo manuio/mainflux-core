@@ -21,11 +21,27 @@ import (
 	"github.com/satori/go.uuid"
 	"gopkg.in/mgo.v2/bson"
 
+	"github.com/krylovsk/gosenml"
+
 	"io"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/go-zoo/bone"
+)
+
+type (
+	// ChannelWriteStatus is a type of Go chan
+	// that is used to communicate request status
+	ChannelWriteStatus struct {
+		Nb  int
+		Str string
+	}
+)
+
+var (
+	// writeStatusChannel is used by HTTP server to communicate req status
+	sc chan ChannelWriteStatus
 )
 
 /** == Functions == */
@@ -207,6 +223,116 @@ func getChannel(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, string(res))
 }
 
+// writeChannel function
+// Generic function that updates the channel value.
+// Can be called via various protocols.
+func writeChannel(id string, bodyBytes []byte) {
+	var body map[string]interface{}
+	if err := json.Unmarshal(bodyBytes, &body); err != nil {
+		fmt.Println("Error unmarshaling body")
+	}
+
+	Db := db.MgoDb{}
+	Db.Init()
+	defer Db.Close()
+
+	s := ChannelWriteStatus{}
+
+	// Check if someone is trying to change "id" key
+	// and protect us from this
+	if _, ok := body["id"]; ok {
+		s.Nb = http.StatusBadRequest
+		s.Str = "Invalid request: 'id' is read-only"
+		sc <- s
+		return
+	}
+	if _, ok := body["device"]; ok {
+		println("Error: can not change device")
+		s.Nb = http.StatusBadRequest
+		s.Str = "Invalid request: 'device' is read-only"
+		sc <- s
+		return
+	}
+	if _, ok := body["created"]; ok {
+		println("Error: can not change device")
+		s.Nb = http.StatusBadRequest
+		s.Str = "Invalid request: 'created' is read-only"
+		sc <- s
+		return
+	}
+
+	// Find the channel
+	c := models.Channel{}
+	if err := Db.C("channels").Find(bson.M{"id": id}).One(&c); err != nil {
+		s.Nb = http.StatusNotFound
+		s.Str = "Channel not found"
+		sc <- s
+		return
+	}
+
+	senmlDecoder := gosenml.NewJSONDecoder()
+	var m gosenml.Message
+	var err error
+	if m, err = senmlDecoder.DecodeMessage(bodyBytes); err != nil {
+		s.Nb = http.StatusBadRequest
+		s.Str = "Invalid request: SenML can not be decoded"
+		sc <- s
+		return
+	}
+
+	m.BaseName = c.Name + m.BaseName
+	m.BaseUnits = c.Unit + m.BaseUnits
+
+	for _, e := range m.Entries {
+		// Name = channelName + baseName + entryName
+		e.Name = m.BaseName + e.Name
+
+		// BaseTime
+		e.Time = m.BaseTime + e.Time
+		if e.Time <= 0 {
+			e.Time += time.Now().Unix()
+		}
+
+		// BaseUnits
+		if e.Units == "" {
+			e.Units = m.BaseUnits
+		}
+
+		/** Insert entry in DB */
+		colQuerier := bson.M{"id": id}
+		change := bson.M{"$push": bson.M{"values": e}}
+		err := Db.C("channels").Update(colQuerier, change)
+		if err != nil {
+			log.Print(err)
+			s.Nb = http.StatusNotFound
+			s.Str = "Not inserted"
+			sc <- s
+			return
+		}
+	}
+
+	// Timestamp
+	t := time.Now().UTC().Format(time.RFC3339)
+	body["updated"] = t
+
+	/** Then update channel timestamp */
+	colQuerier := bson.M{"id": id}
+	change := bson.M{"$set": bson.M{"updated": body["updated"]}}
+	if err := Db.C("channels").Update(colQuerier, change); err != nil {
+		log.Print(err)
+		s.Nb = http.StatusNotFound
+		s.Str = "Not updated"
+		sc <- s
+		return
+	}
+
+	s.Nb = http.StatusOK
+	s.Str = "Updated"
+
+	// Send status to HTTP publisher via status Go chan
+	sc <- s
+}
+
 // updateChannel function
 func updateChannel(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -251,7 +377,7 @@ func updateChannel(w http.ResponseWriter, r *http.Request) {
 	token.Wait()
 
 	// Wait on status from MQTT handler (which executes DB write)
-	status := <-writeStatusChannel
+	status := <-sc
 	w.WriteHeader(status.Nb)
 	str := `{"response": "` + status.Str + `"}`
 	io.WriteString(w, str)
