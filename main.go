@@ -12,10 +12,9 @@ import (
 	"flag"
 	"fmt"
 	"github.com/fatih/color"
-	"github.com/mainflux/mainflux-core/clients"
+	"github.com/mainflux/mainflux-core/api"
 	"github.com/mainflux/mainflux-core/config"
 	"github.com/mainflux/mainflux-core/db"
-	"github.com/mainflux/mainflux-core/servers"
 	"os"
 	"runtime"
 	"strconv"
@@ -118,12 +117,12 @@ func main() {
 	db.InitMongo(cfg.MongoHost, cfg.MongoPort, cfg.MongoDatabase)
 
 	// MQTT
-	mqc := new(clients.MqttConn)
+	mqc := new(api.MqttConn)
 	//Sub to everything coming on all channels of all devices
 	mqc.MqttSub(cfg)
 
 	// Serve HTTP
-	go servers.HTTPServer(cfg)
+	go api.HTTPServer(cfg)
 
 	// Print banner
 	color.Cyan(banner)

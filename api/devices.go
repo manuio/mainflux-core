@@ -6,7 +6,7 @@
  * See the included LICENSE file for more details.
  */
 
-package controllers
+package api
 
 import (
 	"encoding/json"
@@ -29,8 +29,8 @@ import (
 
 /** == Functions == */
 
-// CreateDevice function
-func CreateDevice(w http.ResponseWriter, r *http.Request) {
+// createDevice function
+func createDevice(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	data, err := ioutil.ReadAll(r.Body)
@@ -99,8 +99,8 @@ func CreateDevice(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, str)
 }
 
-// GetDevices function
-func GetDevices(w http.ResponseWriter, r *http.Request) {
+// getDevices function
+func getDevices(w http.ResponseWriter, r *http.Request) {
 	Db := db.MgoDb{}
 	Db.Init()
 	defer Db.Close()
@@ -119,8 +119,8 @@ func GetDevices(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, string(res))
 }
 
-// GetDevice function
-func GetDevice(w http.ResponseWriter, r *http.Request) {
+// getDevice function
+func getDevice(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	Db := db.MgoDb{}
@@ -150,8 +150,8 @@ func GetDevice(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, string(res))
 }
 
-// UpdateDevice function
-func UpdateDevice(w http.ResponseWriter, r *http.Request) {
+// updateDevice function
+func updateDevice(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	data, err := ioutil.ReadAll(r.Body)
@@ -223,8 +223,8 @@ func UpdateDevice(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, str)
 }
 
-// DeleteDevice function
-func DeleteDevice(w http.ResponseWriter, r *http.Request) {
+// deleteDevice function
+func deleteDevice(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	Db := db.MgoDb{}

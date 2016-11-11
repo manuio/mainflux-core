@@ -6,7 +6,7 @@
  * See the included LICENSE file for more details.
  */
 
-package controllers
+package api
 
 import (
 	"encoding/json"
@@ -15,7 +15,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/mainflux/mainflux-core/clients"
 	"github.com/mainflux/mainflux-core/db"
 	"github.com/mainflux/mainflux-core/models"
 
@@ -31,8 +30,8 @@ import (
 
 /** == Functions == */
 
-// CreateChannel function
-func CreateChannel(w http.ResponseWriter, r *http.Request) {
+// createChannel function
+func createChannel(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	data, err := ioutil.ReadAll(r.Body)
@@ -107,8 +106,8 @@ func CreateChannel(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, str)
 }
 
-// GetChannels function
-func GetChannels(w http.ResponseWriter, r *http.Request) {
+// getChannels function
+func getChannels(w http.ResponseWriter, r *http.Request) {
 	Db := db.MgoDb{}
 	Db.Init()
 	defer Db.Close()
@@ -163,8 +162,8 @@ func GetChannels(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, string(res))
 }
 
-// GetChannel function
-func GetChannel(w http.ResponseWriter, r *http.Request) {
+// getChannel function
+func getChannel(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	Db := db.MgoDb{}
@@ -208,8 +207,8 @@ func GetChannel(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, string(res))
 }
 
-// UpdateChannel function
-func UpdateChannel(w http.ResponseWriter, r *http.Request) {
+// updateChannel function
+func updateChannel(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	Db := db.MgoDb{}
@@ -248,18 +247,18 @@ func UpdateChannel(w http.ResponseWriter, r *http.Request) {
 	// Publish the channel update.
 	// This will be catched by the MQTT main client (subscribed to all channel topics)
 	// and then written in the DB in the MQTT handler
-	token := clients.MqttClient.Publish("mainflux/"+id, 0, false, string(data))
+	token := mqttClient.Publish("mainflux/"+id, 0, false, string(data))
 	token.Wait()
 
 	// Wait on status from MQTT handler (which executes DB write)
-	status := <-clients.WriteStatusChannel
+	status := <-writeStatusChannel
 	w.WriteHeader(status.Nb)
 	str := `{"response": "` + status.Str + `"}`
 	io.WriteString(w, str)
 }
 
-// DeleteChannel function
-func DeleteChannel(w http.ResponseWriter, r *http.Request) {
+// deleteChannel function
+func deleteChannel(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	Db := db.MgoDb{}

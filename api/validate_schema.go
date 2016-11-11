@@ -6,7 +6,7 @@
  * See the included LICENSE file for more details.
  */
 
-package controllers
+package api
 
 import (
 	"fmt"

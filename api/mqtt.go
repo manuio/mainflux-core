@@ -1,4 +1,4 @@
-package clients
+package api
 
 import (
 	"encoding/json"
@@ -35,10 +35,10 @@ type (
 
 var (
 	// MqttClient is used in HTTP server to communicate HTTP value updates/requests
-	MqttClient mqtt.Client
+	mqttClient mqtt.Client
 
-	// WriteStatusChannel is used by HTTP server to communicate req status
-	WriteStatusChannel chan ChannelWriteStatus
+	// writeStatusChannel is used by HTTP server to communicate req status
+	writeStatusChannel chan ChannelWriteStatus
 )
 
 //define a function for the default message handler
@@ -48,10 +48,10 @@ var msgHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) 
 
 	s := strings.Split(msg.Topic(), "/")
 	chanID := s[len(s)-1]
-	status := WriteChannel(chanID, msg.Payload())
+	status := writeChannel(chanID, msg.Payload())
 
 	// Send status to HTTP publisher
-	WriteStatusChannel <- status
+	writeStatusChannel <- status
 
 	fmt.Println(status)
 }
@@ -78,14 +78,14 @@ func (mqc *MqttConn) MqttSub(cfg config.Config) {
 		fmt.Println(token.Error())
 	}
 
-	MqttClient = mqc.Client
-	WriteStatusChannel = make(chan ChannelWriteStatus)
+	mqttClient = mqc.Client
+	writeStatusChannel = make(chan ChannelWriteStatus)
 }
 
-// WriteChannel function
+// writeChannel function
 // Generic function that updates the channel value.
 // Can be called via various protocols.
-func WriteChannel(id string, bodyBytes []byte) ChannelWriteStatus {
+func writeChannel(id string, bodyBytes []byte) ChannelWriteStatus {
 	var body map[string]interface{}
 	if err := json.Unmarshal(bodyBytes, &body); err != nil {
 		fmt.Println("Error unmarshaling body")

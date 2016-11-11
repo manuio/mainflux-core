@@ -6,7 +6,7 @@
  * See the included LICENSE file for more details.
  */
 
-package controllers
+package api
 
 import (
 	"io"
@@ -15,8 +15,7 @@ import (
 
 /** == Functions == */
 
-// GetStatus function
-func GetStatus(w http.ResponseWriter, r *http.Request) {
+func getStatus(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	str := `{"running": true}`
