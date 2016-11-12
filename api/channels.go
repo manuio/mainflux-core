@@ -39,11 +39,6 @@ type (
 	}
 )
 
-var (
-	// writeStatusChannel is used by HTTP server to communicate req status
-	sc chan ChannelWriteStatus
-)
-
 /** == Functions == */
 
 // createChannel function
@@ -243,21 +238,21 @@ func writeChannel(id string, bodyBytes []byte) {
 	if _, ok := body["id"]; ok {
 		s.Nb = http.StatusBadRequest
 		s.Str = "Invalid request: 'id' is read-only"
-		sc <- s
+		fmt.Println(s.Nb, s.Str)
 		return
 	}
 	if _, ok := body["device"]; ok {
 		println("Error: can not change device")
 		s.Nb = http.StatusBadRequest
 		s.Str = "Invalid request: 'device' is read-only"
-		sc <- s
+		fmt.Println(s.Nb, s.Str)
 		return
 	}
 	if _, ok := body["created"]; ok {
 		println("Error: can not change device")
 		s.Nb = http.StatusBadRequest
 		s.Str = "Invalid request: 'created' is read-only"
-		sc <- s
+		fmt.Println(s.Nb, s.Str)
 		return
 	}
 
@@ -266,7 +261,7 @@ func writeChannel(id string, bodyBytes []byte) {
 	if err := Db.C("channels").Find(bson.M{"id": id}).One(&c); err != nil {
 		s.Nb = http.StatusNotFound
 		s.Str = "Channel not found"
-		sc <- s
+		fmt.Println(s.Nb, s.Str)
 		return
 	}
 
@@ -276,7 +271,7 @@ func writeChannel(id string, bodyBytes []byte) {
 	if m, err = senmlDecoder.DecodeMessage(bodyBytes); err != nil {
 		s.Nb = http.StatusBadRequest
 		s.Str = "Invalid request: SenML can not be decoded"
-		sc <- s
+		fmt.Println(s.Nb, s.Str)
 		return
 	}
 
@@ -306,7 +301,7 @@ func writeChannel(id string, bodyBytes []byte) {
 			log.Print(err)
 			s.Nb = http.StatusNotFound
 			s.Str = "Not inserted"
-			sc <- s
+			fmt.Println(s.Nb, s.Str)
 			return
 		}
 	}
@@ -322,15 +317,14 @@ func writeChannel(id string, bodyBytes []byte) {
 		log.Print(err)
 		s.Nb = http.StatusNotFound
 		s.Str = "Not updated"
-		sc <- s
+		fmt.Println(s.Nb, s.Str)
 		return
 	}
 
 	s.Nb = http.StatusOK
 	s.Str = "Updated"
 
-	// Send status to HTTP publisher via status Go chan
-	sc <- s
+	println(s.Str)
 }
 
 // updateChannel function
@@ -376,10 +370,11 @@ func updateChannel(w http.ResponseWriter, r *http.Request) {
 	token := mqttClient.Publish("mainflux/"+id, 0, false, string(data))
 	token.Wait()
 
-	// Wait on status from MQTT handler (which executes DB write)
-	status := <-sc
-	w.WriteHeader(status.Nb)
-	str := `{"response": "` + status.Str + `"}`
+	// Send back response to HTTP client
+	// We have accepted the request and published it over MQTT,
+	// but we do not know if it will be executed or not (MQTT is not req-reply protocol)
+	w.WriteHeader(http.StatusAccepted)
+	str := `{"response": "channel update published"}`
 	io.WriteString(w, str)
 }
 
