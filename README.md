@@ -1,5 +1,3 @@
-![gophersBanner](https://github.com/mainflux/mainflux-doc/blob/master/img/gopherBanner.jpg)
-
 # Mainflux Core
 
 [![License](https://img.shields.io/badge/license-Apache%20v2.0-blue.svg)](LICENSE)
