@@ -17,6 +17,7 @@ import (
 	"github.com/go-zoo/bone"
 )
 
+// HTTPServer function
 func HTTPServer(cfg config.Config) {
 
 	mux := bone.New()
