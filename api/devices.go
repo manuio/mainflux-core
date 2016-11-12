@@ -233,8 +233,34 @@ func deleteDevice(w http.ResponseWriter, r *http.Request) {
 
 	id := bone.GetValue(r, "device_id")
 
-	err := Db.C("devices").Remove(bson.M{"id": id})
+	// Get Device
+	d := models.Device{}
+	err := Db.C("devices").Find(bson.M{"id": id}).One(&d)
 	if err != nil {
+		log.Print(err)
+		w.WriteHeader(http.StatusNotFound)
+		str := `{"response": "not found", "id": "` + id + `"}`
+		if err != nil {
+			log.Print(err)
+		}
+		io.WriteString(w, str)
+		return
+	}
+
+	// Delete all the channels that belong to the device
+	for _, cid := range d.Channels {
+		err := Db.C("channels").Remove(bson.M{"id": cid})
+		if err != nil {
+			log.Print(err)
+			w.WriteHeader(http.StatusNotFound)
+			str := `{"response": "cannot delete channel", "id": "` + cid + `"}`
+			io.WriteString(w, str)
+			return
+		}
+	}
+
+	// Delete device
+	if err := Db.C("devices").Remove(bson.M{"id": id}); err != nil {
 		log.Print(err)
 		w.WriteHeader(http.StatusNotFound)
 		str := `{"response": "not deleted", "id": "` + id + `"}`

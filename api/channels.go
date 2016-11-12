@@ -98,13 +98,23 @@ func createChannel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO Check if Device ID is valid (in database)
-
 	// Timestamp
 	t := time.Now().UTC().Format(time.RFC3339)
-	c.Created, c.Updated = t, t
+
+	// Append channelID to the Device's `Channels` registry
+	did := c.Device
+	if err := Db.C("devices").Update(bson.M{"id": did},
+		bson.M{"$addToSet": bson.M{"channels": c.ID},
+			"$set": bson.M{"updated": t}}); err != nil {
+		log.Print(err)
+		w.WriteHeader(http.StatusNotFound)
+		str := `{"response": "cannot create channel for device ` + did + `"}`
+		io.WriteString(w, str)
+		return
+	}
 
 	// Insert Channel
+	c.Created, c.Updated = t, t
 	if err := Db.C("channels").Insert(c); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		str := `{"response": "cannot create channel"}`
@@ -388,8 +398,33 @@ func deleteChannel(w http.ResponseWriter, r *http.Request) {
 
 	id := bone.GetValue(r, "channel_id")
 
-	err := Db.C("channels").Remove(bson.M{"id": id})
+	// Get channel
+	c := models.Channel{}
+	if err := Db.C("channels").Find(bson.M{"id": id}).
+		Select(bson.M{"values": bson.M{"$slice": 1}}).
+		One(&c); err != nil {
+		log.Print(err)
+		w.WriteHeader(http.StatusNotFound)
+		str := `{"response": "not found", "id": "` + id + `"}`
+		io.WriteString(w, str)
+		return
+	}
+
+	// Remove channelID from the Device's `Channels` registry
+	t := time.Now().UTC().Format(time.RFC3339)
+	did := c.Device
+	err := Db.C("devices").Update(bson.M{"id": did},
+		bson.M{"$pull": bson.M{"channels": c.ID}, "$set": bson.M{"updated": t}})
 	if err != nil {
+		log.Print(err)
+		w.WriteHeader(http.StatusNotFound)
+		str := `{"response": "cannot remove channel for device ` + did + `"}`
+		io.WriteString(w, str)
+		return
+	}
+
+	// Deleta channel
+	if err := Db.C("channels").Remove(bson.M{"id": id}); err != nil {
 		log.Print(err)
 		w.WriteHeader(http.StatusNotFound)
 		str := `{"response": "not deleted", "id": "` + id + `"}`

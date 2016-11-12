@@ -20,7 +20,7 @@ type (
 		ConnectedAt   string `json:"connected_at"`
 		DisonnectedAt string `json:"disconnected_at"`
 
-		Channels []Channel `json:"channels"`
+		Channels []string `json:"channels"`
 
 		Created string `json:"created"`
 		Updated string `json:"updated"`
