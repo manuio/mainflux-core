@@ -135,8 +135,8 @@ func getChannels(w http.ResponseWriter, r *http.Request) {
 
 	// Get fileter values from parameters:
 	// - climit = count limit, limits number of returned `channel` elements
-	// - vlimit = value limit, limits number of values within the channel
-	var climit, vlimit int
+	// - elimit = entry limit, limits number of entries within the channel
+	var climit, elimit int
 	var err error
 	s := r.URL.Query().Get("climit")
 	if len(s) == 0 {
@@ -152,12 +152,12 @@ func getChannels(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	s = r.URL.Query().Get("vlimit")
+	s = r.URL.Query().Get("elimit")
 	if len(s) == 0 {
 		// Set default limit to -5
-		vlimit = -100
+		elimit = -100
 	} else {
-		vlimit, err = strconv.Atoi(s)
+		elimit, err = strconv.Atoi(s)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			str := `{"response": "wrong value limit"}`
@@ -169,7 +169,7 @@ func getChannels(w http.ResponseWriter, r *http.Request) {
 	// Query DB
 	results := []models.Channel{}
 	if err := Db.C("channels").Find(nil).
-		Select(bson.M{"values": bson.M{"$slice": vlimit}}).
+		Select(bson.M{"entries": bson.M{"$slice": elimit}}).
 		Sort("-_id").Limit(climit).All(&results); err != nil {
 		log.Print(err)
 	}
@@ -193,14 +193,14 @@ func getChannel(w http.ResponseWriter, r *http.Request) {
 
 	id := bone.GetValue(r, "channel_id")
 
-	var vlimit int
+	var elimit int
 	var err error
-	s := r.URL.Query().Get("vlimit")
+	s := r.URL.Query().Get("elimit")
 	if len(s) == 0 {
 		// Set default limit to -5
-		vlimit = -5
+		elimit = -5
 	} else {
-		vlimit, err = strconv.Atoi(s)
+		elimit, err = strconv.Atoi(s)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			str := `{"response": "wrong limit"}`
@@ -211,7 +211,7 @@ func getChannel(w http.ResponseWriter, r *http.Request) {
 
 	result := models.Channel{}
 	if err := Db.C("channels").Find(bson.M{"id": id}).
-		Select(bson.M{"values": bson.M{"$slice": vlimit}}).
+		Select(bson.M{"entries": bson.M{"$slice": elimit}}).
 		One(&result); err != nil {
 		log.Print(err)
 		w.WriteHeader(http.StatusNotFound)
@@ -275,7 +275,28 @@ func writeChannel(id string, bodyBytes []byte) {
 		return
 	}
 
-	senmlDecoder := gosenml.NewJSONDecoder()
+	// Create Entry
+	entry := models.Entry{}
+
+	t := time.Now().UTC().Format(time.RFC3339)
+	sml := gosenml.Message{}
+	msg := models.Message{ID: "", Reply: false, Relayed: false, Sender: "", SenML: sml, Created: t}
+
+	if err := json.Unmarshal(bodyBytes, &msg); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// Validate SenML
+	if err := msg.SenML.Validate(); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// Values, parsed from SenML message
+	var values []gosenml.Entry
+
+	/**senmlDecoder := gosenml.NewJSONDecoder()
 	var m gosenml.Message
 	var err error
 	if m, err = senmlDecoder.DecodeMessage(bodyBytes); err != nil {
@@ -284,7 +305,9 @@ func writeChannel(id string, bodyBytes []byte) {
 		fmt.Println(s.Nb, s.Str)
 		return
 	}
+	**/
 
+	m := msg.SenML
 	m.BaseName = c.Name + m.BaseName
 	m.BaseUnits = c.Unit + m.BaseUnits
 
@@ -304,6 +327,7 @@ func writeChannel(id string, bodyBytes []byte) {
 		}
 
 		/** Insert entry in DB */
+		/**
 		colQuerier := bson.M{"id": id}
 		change := bson.M{"$push": bson.M{"values": e}}
 		err := Db.C("channels").Update(colQuerier, change)
@@ -314,15 +338,20 @@ func writeChannel(id string, bodyBytes []byte) {
 			fmt.Println(s.Nb, s.Str)
 			return
 		}
+		**/
+		values = append(values, e)
 	}
 
 	// Timestamp
-	t := time.Now().UTC().Format(time.RFC3339)
-	body["updated"] = t
+	t = time.Now().UTC().Format(time.RFC3339)
 
-	/** Then update channel timestamp */
+	entry.Msg = msg
+	entry.Values = values
+	entry.Timestamp = t
+
+	/** Update channel with latest Entry */
 	colQuerier := bson.M{"id": id}
-	change := bson.M{"$set": bson.M{"updated": body["updated"]}}
+	change := bson.M{"$addToSet": bson.M{"entries": entry}, "$set": bson.M{"updated": t}}
 	if err := Db.C("channels").Update(colQuerier, change); err != nil {
 		log.Print(err)
 		s.Nb = http.StatusNotFound

@@ -13,6 +13,16 @@ import (
 )
 
 type (
+	// Channel Entry - a record of recieved data in the channel
+	Entry struct {
+		// Message sent by the device or app on the channel
+		Msg Message `json:"msg"`
+		// Parsed SenML from messages, i.e. derived values
+		Values []gosenml.Entry `json:"values"`
+		// Timestamp of Entry
+		Timestamp string `json:"timestamp"`
+	}
+
 	// Channel struct
 	Channel struct {
 		ID     string `json:"id"`
@@ -23,7 +33,8 @@ type (
 		// Unit is optional. If present, it is pre-pended to `bu` member of SenML.
 		Unit string `json:"unit"`
 
-		Values []gosenml.Entry `json:"values"`
+		// Entries in the DB
+		Entries []Entry `json:"entries"`
 
 		Created string `json:"created"`
 		Updated string `json:"updated"`
