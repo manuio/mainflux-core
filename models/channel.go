@@ -13,15 +13,26 @@ import (
 )
 
 type (
-	// Channel struct
+	// Channel is a bidirectional pipe of communication
+	// between devices and applications.
+	//
+	// SENSOR: If a channel is used for sending the measirements from
+	// the sensor of the device, the usual case it that device
+	// writes into th channel and applications listen.
+	//
+	// ACTUATOR: If a channel is used for triggering action (switches, buttons, relays)
+	// and similar then application must publish the message into the channel, and
+	// device must be subscribed to the channel.
+	//
+	// Channels are tightly connected to MQTT topics - one channel ID corresponds to one topic.
 	Channel struct {
-		ID     string `json:"id"`
-		Device string `json:"device"`
+		ID string `json:"id"`
 
-		// Name is optional. If present, it is pre-pended to `bn` member of SenML.
-		Name string `json:"name"`
-		// Unit is optional. If present, it is pre-pended to `bu` member of SenML.
-		Unit string `json:"unit"`
+		// ID of device to which this channel belongs to.
+		// Channels always belong to one device which uses them to
+		// publish the info of it's properties, or to listen on them
+		// messages that applications send to this device.
+		Device string `json:"device"`
 
 		Values []gosenml.Entry `json:"values"`
 

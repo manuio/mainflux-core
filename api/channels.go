@@ -50,16 +50,11 @@ func createChannel(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	if len(data) == 0 {
-		w.WriteHeader(http.StatusBadRequest)
-		str := `{"response": "no data (Device ID) provided"}`
-		io.WriteString(w, str)
-		return
-	}
-
-	var body map[string]interface{}
-	if err := json.Unmarshal(data, &body); err != nil {
-		panic(err)
+	if len(data) > 0 {
+		var body map[string]interface{}
+		if err := json.Unmarshal(data, &body); err != nil {
+			panic(err)
+		}
 	}
 
 	/**
@@ -80,8 +75,10 @@ func createChannel(w http.ResponseWriter, r *http.Request) {
 	defer Db.Close()
 
 	c := models.Channel{}
-	if err := json.Unmarshal(data, &c); err != nil {
-		panic(err)
+	if len(data) > 0 {
+		if err := json.Unmarshal(data, &c); err != nil {
+			panic(err)
+		}
 	}
 
 	// Creating UUID Version 4
@@ -91,18 +88,20 @@ func createChannel(w http.ResponseWriter, r *http.Request) {
 	c.ID = uuid.String()
 
 	// Insert reference to DeviceID
-	if len(c.Device) == 0 {
+	did := bone.GetValue(r, "device_id")
+	if len(did) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		str := `{"response": "no device ID provided in request"}`
 		io.WriteString(w, str)
 		return
 	}
 
+	c.Device = did
+
 	// Timestamp
 	t := time.Now().UTC().Format(time.RFC3339)
 
 	// Append channelID to the Device's `Channels` registry
-	did := c.Device
 	if err := Db.C("devices").Update(bson.M{"id": did},
 		bson.M{"$addToSet": bson.M{"channels": c.ID},
 			"$set": bson.M{"updated": t}}); err != nil {
@@ -140,7 +139,7 @@ func getChannels(w http.ResponseWriter, r *http.Request) {
 	var err error
 	s := r.URL.Query().Get("climit")
 	if len(s) == 0 {
-		// Set default limit to -5
+		// Set default limit to -100
 		climit = -100
 	} else {
 		climit, err = strconv.Atoi(s)
@@ -154,7 +153,7 @@ func getChannels(w http.ResponseWriter, r *http.Request) {
 
 	s = r.URL.Query().Get("vlimit")
 	if len(s) == 0 {
-		// Set default limit to -5
+		// Set default limit to -100
 		vlimit = -100
 	} else {
 		vlimit, err = strconv.Atoi(s)
@@ -191,14 +190,14 @@ func getChannel(w http.ResponseWriter, r *http.Request) {
 	Db.Init()
 	defer Db.Close()
 
-	id := bone.GetValue(r, "channel_id")
+	cid := bone.GetValue(r, "channel_id")
 
 	var vlimit int
 	var err error
 	s := r.URL.Query().Get("vlimit")
 	if len(s) == 0 {
 		// Set default limit to -5
-		vlimit = -5
+		vlimit = -100
 	} else {
 		vlimit, err = strconv.Atoi(s)
 		if err != nil {
@@ -210,12 +209,12 @@ func getChannel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result := models.Channel{}
-	if err := Db.C("channels").Find(bson.M{"id": id}).
+	if err := Db.C("channels").Find(bson.M{"id": cid}).
 		Select(bson.M{"values": bson.M{"$slice": vlimit}}).
 		One(&result); err != nil {
 		log.Print(err)
 		w.WriteHeader(http.StatusNotFound)
-		str := `{"response": "not found", "id": "` + id + `"}`
+		str := `{"response": "not found", "id": "` + cid + `"}`
 		io.WriteString(w, str)
 		return
 	}
@@ -231,7 +230,7 @@ func getChannel(w http.ResponseWriter, r *http.Request) {
 // writeChannel function
 // Generic function that updates the channel value.
 // Can be called via various protocols.
-func writeChannel(id string, bodyBytes []byte) {
+func writeChannel(cid string, bodyBytes []byte) {
 	var body map[string]interface{}
 	if err := json.Unmarshal(bodyBytes, &body); err != nil {
 		fmt.Println("Error unmarshaling body")
@@ -268,7 +267,7 @@ func writeChannel(id string, bodyBytes []byte) {
 
 	// Find the channel
 	c := models.Channel{}
-	if err := Db.C("channels").Find(bson.M{"id": id}).One(&c); err != nil {
+	if err := Db.C("channels").Find(bson.M{"id": cid}).One(&c); err != nil {
 		s.Nb = http.StatusNotFound
 		s.Str = "Channel not found"
 		fmt.Println(s.Nb, s.Str)
@@ -285,11 +284,8 @@ func writeChannel(id string, bodyBytes []byte) {
 		return
 	}
 
-	m.BaseName = c.Name + m.BaseName
-	m.BaseUnits = c.Unit + m.BaseUnits
-
 	for _, e := range m.Entries {
-		// Name = channelName + baseName + entryName
+		// Name = baseName + entryName
 		e.Name = m.BaseName + e.Name
 
 		// BaseTime
@@ -304,8 +300,11 @@ func writeChannel(id string, bodyBytes []byte) {
 		}
 
 		/** Insert entry in DB */
-		colQuerier := bson.M{"id": id}
-		change := bson.M{"$push": bson.M{"values": e}}
+		colQuerier := bson.M{"id": cid}
+		// Timestamp
+		t := time.Now().UTC().Format(time.RFC3339)
+		// Append entry to exiting array
+		change := bson.M{"$push": bson.M{"values": e}, "$set": bson.M{"updated": t}}
 		err := Db.C("channels").Update(colQuerier, change)
 		if err != nil {
 			log.Print(err)
@@ -314,21 +313,6 @@ func writeChannel(id string, bodyBytes []byte) {
 			fmt.Println(s.Nb, s.Str)
 			return
 		}
-	}
-
-	// Timestamp
-	t := time.Now().UTC().Format(time.RFC3339)
-	body["updated"] = t
-
-	/** Then update channel timestamp */
-	colQuerier := bson.M{"id": id}
-	change := bson.M{"$set": bson.M{"updated": body["updated"]}}
-	if err := Db.C("channels").Update(colQuerier, change); err != nil {
-		log.Print(err)
-		s.Nb = http.StatusNotFound
-		s.Str = "Not updated"
-		fmt.Println(s.Nb, s.Str)
-		return
 	}
 
 	s.Nb = http.StatusOK
@@ -372,12 +356,13 @@ func updateChannel(w http.ResponseWriter, r *http.Request) {
 	}
 	**/
 
-	id := bone.GetValue(r, "channel_id")
+	did := bone.GetValue(r, "device_id")
+	cid := bone.GetValue(r, "channel_id")
 
 	// Publish the channel update.
 	// This will be catched by the MQTT main client (subscribed to all channel topics)
 	// and then written in the DB in the MQTT handler
-	token := mqttClient.Publish("mainflux/"+id, 0, false, string(data))
+	token := mqttClient.Publish("mainflux/devices/"+did+"/channels/"+cid, 0, false, string(data))
 	token.Wait()
 
 	// Send back response to HTTP client
@@ -396,25 +381,13 @@ func deleteChannel(w http.ResponseWriter, r *http.Request) {
 	Db.Init()
 	defer Db.Close()
 
-	id := bone.GetValue(r, "channel_id")
-
-	// Get channel
-	c := models.Channel{}
-	if err := Db.C("channels").Find(bson.M{"id": id}).
-		Select(bson.M{"values": bson.M{"$slice": 1}}).
-		One(&c); err != nil {
-		log.Print(err)
-		w.WriteHeader(http.StatusNotFound)
-		str := `{"response": "not found", "id": "` + id + `"}`
-		io.WriteString(w, str)
-		return
-	}
+	did := bone.GetValue(r, "device_id")
+	cid := bone.GetValue(r, "channel_id")
 
 	// Remove channelID from the Device's `Channels` registry
 	t := time.Now().UTC().Format(time.RFC3339)
-	did := c.Device
 	err := Db.C("devices").Update(bson.M{"id": did},
-		bson.M{"$pull": bson.M{"channels": c.ID}, "$set": bson.M{"updated": t}})
+		bson.M{"$pull": bson.M{"channels": cid}, "$set": bson.M{"updated": t}})
 	if err != nil {
 		log.Print(err)
 		w.WriteHeader(http.StatusNotFound)
@@ -423,16 +396,16 @@ func deleteChannel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Deleta channel
-	if err := Db.C("channels").Remove(bson.M{"id": id}); err != nil {
+	// Delete channel
+	if err := Db.C("channels").Remove(bson.M{"id": cid}); err != nil {
 		log.Print(err)
 		w.WriteHeader(http.StatusNotFound)
-		str := `{"response": "not deleted", "id": "` + id + `"}`
+		str := `{"response": "not deleted", "id": "` + cid + `"}`
 		io.WriteString(w, str)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	str := `{"response": "deleted", "id": "` + id + `"}`
+	str := `{"response": "deleted", "id": "` + cid + `"}`
 	io.WriteString(w, str)
 }

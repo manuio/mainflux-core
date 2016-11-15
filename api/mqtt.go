@@ -33,7 +33,7 @@ var msgHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) 
 	writeChannel(chanID, msg.Payload())
 }
 
-// MqttSub function - we subscribe to topic `mainflux/#` (no trailing `/`)
+// MqttSub function - we subscribe to topic `mainflux/channels/#` (no trailing `/`)
 func (mqc *MqttConn) MqttSub(cfg config.Config) {
 	// Create a ClientOptions struct setting the broker address, clientid, turn
 	// off trace output and set the default message handler
@@ -50,8 +50,8 @@ func (mqc *MqttConn) MqttSub(cfg config.Config) {
 	// Subscribe to all channels of all the devices and request messages to be delivered
 	// at a maximum qos of zero, wait for the receipt to confirm the subscription
 	// Topic is in the form:
-	// mainflux/<channel_id>
-	if token := mqc.Client.Subscribe("mainflux/#", 0, nil); token.Wait() && token.Error() != nil {
+	// mainflux/devices/<device_id>/channels/<channel_id>
+	if token := mqc.Client.Subscribe("mainflux/devices/+/channels/+", 0, nil); token.Wait() && token.Error() != nil {
 		fmt.Println(token.Error())
 	}
 
