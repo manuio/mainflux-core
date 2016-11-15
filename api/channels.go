@@ -21,7 +21,7 @@ import (
 	"github.com/satori/go.uuid"
 	"gopkg.in/mgo.v2/bson"
 
-	"github.com/krylovsk/gosenml"
+	"github.com/cisco/senml"
 
 	"io"
 	"io/ioutil"
@@ -230,11 +230,7 @@ func getChannel(w http.ResponseWriter, r *http.Request) {
 // writeChannel function
 // Generic function that updates the channel value.
 // Can be called via various protocols.
-func writeChannel(cid string, bodyBytes []byte) {
-	var body map[string]interface{}
-	if err := json.Unmarshal(bodyBytes, &body); err != nil {
-		fmt.Println("Error unmarshaling body")
-	}
+func writeChannel(cid string, data []byte) {
 
 	Db := db.MgoDb{}
 	Db.Init()
@@ -242,77 +238,47 @@ func writeChannel(cid string, bodyBytes []byte) {
 
 	s := ChannelWriteStatus{}
 
-	// Check if someone is trying to change "id" key
-	// and protect us from this
-	if _, ok := body["id"]; ok {
-		s.Nb = http.StatusBadRequest
-		s.Str = "Invalid request: 'id' is read-only"
-		fmt.Println(s.Nb, s.Str)
-		return
-	}
-	if _, ok := body["device"]; ok {
-		println("Error: can not change device")
-		s.Nb = http.StatusBadRequest
-		s.Str = "Invalid request: 'device' is read-only"
-		fmt.Println(s.Nb, s.Str)
-		return
-	}
-	if _, ok := body["created"]; ok {
-		println("Error: can not change device")
-		s.Nb = http.StatusBadRequest
-		s.Str = "Invalid request: 'created' is read-only"
-		fmt.Println(s.Nb, s.Str)
-		return
-	}
-
-	// Find the channel
-	c := models.Channel{}
-	if err := Db.C("channels").Find(bson.M{"id": cid}).One(&c); err != nil {
-		s.Nb = http.StatusNotFound
-		s.Str = "Channel not found"
-		fmt.Println(s.Nb, s.Str)
-		return
-	}
-
-	senmlDecoder := gosenml.NewJSONDecoder()
-	var m gosenml.Message
+	var m senml.SenML
 	var err error
-	if m, err = senmlDecoder.DecodeMessage(bodyBytes); err != nil {
+	if m, err = senml.Decode(data, senml.JSON); err != nil {
 		s.Nb = http.StatusBadRequest
 		s.Str = "Invalid request: SenML can not be decoded"
 		fmt.Println(s.Nb, s.Str)
 		return
 	}
 
-	for _, e := range m.Entries {
-		// Name = baseName + entryName
-		e.Name = m.BaseName + e.Name
+	// Add the "raw" SenML message to channel Entries
+	e := models.ChannelEntry{}
+	e.SenML = make([]senml.SenMLRecord, len(m.Records))
+	copy(e.SenML, m.Records)
+	// Timestamp
+	t := time.Now().UTC().Format(time.RFC3339)
+	e.Timestamp = t
 
-		// BaseTime
-		e.Time = m.BaseTime + e.Time
-		if e.Time <= 0 {
-			e.Time += time.Now().Unix()
-		}
+	if err := Db.C("channels").Update(bson.M{"id": cid},
+		bson.M{"$push": bson.M{"entries": e}, "$set": bson.M{"updated": t}}); err != nil {
+		log.Print(err)
+		s.Nb = http.StatusNotFound
+		s.Str = "Not inserted"
+		fmt.Println(s.Nb, s.Str)
+		return
+	}
 
-		// BaseUnits
-		if e.Units == "" {
-			e.Units = m.BaseUnits
-		}
+	// Normalize (i.e. resolve) SenML
+	n := senml.Normalize(m)
 
-		/** Insert entry in DB */
-		colQuerier := bson.M{"id": cid}
-		// Timestamp
-		t := time.Now().UTC().Format(time.RFC3339)
-		// Append entry to exiting array
-		change := bson.M{"$push": bson.M{"values": e}, "$set": bson.M{"updated": t}}
-		err := Db.C("channels").Update(colQuerier, change)
-		if err != nil {
-			log.Print(err)
-			s.Nb = http.StatusNotFound
-			s.Str = "Not inserted"
-			fmt.Println(s.Nb, s.Str)
-			return
-		}
+	/** Insert entry in DB */
+	colQuerier := bson.M{"id": cid}
+	// Timestamp
+	t = time.Now().UTC().Format(time.RFC3339)
+	// Append entry to exiting array
+	change := bson.M{"$push": bson.M{"ts": bson.M{"$each": n.Records}}, "$set": bson.M{"updated": t}}
+	if err := Db.C("channels").Update(colQuerier, change); err != nil {
+		log.Print(err)
+		s.Nb = http.StatusNotFound
+		s.Str = "Not inserted"
+		fmt.Println(s.Nb, s.Str)
+		return
 	}
 
 	s.Nb = http.StatusOK
@@ -340,21 +306,6 @@ func updateChannel(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, str)
 		return
 	}
-
-	var body map[string]interface{}
-	if err := json.Unmarshal(data, &body); err != nil {
-		panic(err)
-	}
-
-	/**
-	if validateJsonSchema("channel", body) != true {
-		println("Invalid schema")
-		w.WriteHeader(http.StatusBadRequest)
-		str := `{"response": "invalid json schema in request"}`
-		io.WriteString(w, str)
-		return
-	}
-	**/
 
 	did := bone.GetValue(r, "device_id")
 	cid := bone.GetValue(r, "channel_id")
