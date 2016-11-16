@@ -11,8 +11,11 @@ package models
 import ()
 
 type (
-	// SenMLRecord struct as implemented by Cisco (https://github.com/cisco/senml)
-	// Copied here for quick documentatnion
+	// Channel Entry struct.
+	// First part identical to SenMLRecord struct
+	// as implemented by Cisco (https://github.com/cisco/senml).
+	// Second part contains Mainflux specific fields.
+	//
 	// https://tools.ietf.org/html/draft-ietf-core-senml-04#section-11.2
 	//
 	// IANA will create a new registry for SenML labels.  The initial
