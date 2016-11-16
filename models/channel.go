@@ -8,41 +8,39 @@
 
 package models
 
-import (
-	"github.com/cisco/senml"
-)
+import ()
 
 type (
 	// SenMLRecord struct as implemented by Cisco (https://github.com/cisco/senml)
 	// Copied here for quick documentatnion
-	/**
-	https://tools.ietf.org/html/draft-ietf-core-senml-04#section-11.2
+	// https://tools.ietf.org/html/draft-ietf-core-senml-04#section-11.2
+	//
+	// IANA will create a new registry for SenML labels.  The initial
+	// content of the registry is:
+	//
+	// +---------------+-------+------+----------+----+---------+
+	// |          name | label | cbor | xml type | id | note    |
+	// +---------------+-------+------+----------+----+---------+
+	// |     base name | bn    | -2   | string   | a  | rfcxxxx |
+	// |      base sum | bs    | -6   | double   | a  | rfcxxxx |
+	// |     base time | bt    | -3   | double   | a  | rfcxxxx |
+	// |     base unit | bu    | -4   | string   | a  | rfcxxxx |
+	// |    base value | bv    | -5   | double   | a  | rfcxxxx |
+	// |  base version | bver  | -1   | int      | a  | rfcxxxx |
+	// | boolean value | vb    | 4    | boolean  | a  | rfcxxxx |
+	// |    data value | vd    | 8    | string   | a  | rfcxxxx |
+	// |          name | n     | 0    | string   | a  | rfcxxxx |
+	// |  string value | vs    | 3    | string   | a  | rfcxxxx |
+	// |          time | t     | 6    | double   | a  | rfcxxxx |
+	// |          unit | u     | 1    | string   | a  | rfcxxxx |
+	// |   update time | ut    | 7    | double   | a  | rfcxxxx |
+	// |         value | v     | 2    | double   | a  | rfcxxxx |
+	// |     value sum | s     | 5    | double   | a  | rfcxxxx |
+	// |          link | l     | 9    | string   | a  | rfcxxxx |
+	// +---------------+-------+------+----------+----+---------+
 
-	IANA will create a new registry for SenML labels.  The initial
-	content of the registry is:
-
-	+---------------+-------+------+----------+----+---------+
-	|          name | label | cbor | xml type | id | note    |
-	+---------------+-------+------+----------+----+---------+
-	|     base name | bn    | -2   | string   | a  | rfcxxxx |
-	|      base sum | bs    | -6   | double   | a  | rfcxxxx |
-	|     base time | bt    | -3   | double   | a  | rfcxxxx |
-	|     base unit | bu    | -4   | string   | a  | rfcxxxx |
-	|    base value | bv    | -5   | double   | a  | rfcxxxx |
-	|  base version | bver  | -1   | int      | a  | rfcxxxx |
-	| boolean value | vb    | 4    | boolean  | a  | rfcxxxx |
-	|    data value | vd    | 8    | string   | a  | rfcxxxx |
-	|          name | n     | 0    | string   | a  | rfcxxxx |
-	|  string value | vs    | 3    | string   | a  | rfcxxxx |
-	|          time | t     | 6    | double   | a  | rfcxxxx |
-	|          unit | u     | 1    | string   | a  | rfcxxxx |
-	|   update time | ut    | 7    | double   | a  | rfcxxxx |
-	|         value | v     | 2    | double   | a  | rfcxxxx |
-	|     value sum | s     | 5    | double   | a  | rfcxxxx |
-	|          link | l     | 9    | string   | a  | rfcxxxx |
-	+---------------+-------+------+----------+----+---------+
-
-	SenMLRecord struct {
+	ChannelEntry struct {
+		// SenML stuff
 		XMLName *bool `json:"_,omitempty" xml:"senml"`
 
 		BaseName    string  `json:"bn,omitempty"  xml:"bn,attr,omitempty"`
@@ -63,16 +61,10 @@ type (
 		BoolValue   *bool    `json:"vb,omitempty"  xml:"vb,attr,omitempty"`
 
 		Sum *float64 `json:"s,omitempty"  xml:"sum,,attr,omitempty"`
-	}
-	*/
 
-	// ChannelEntry
-	// "Raw" - i.e. unresolved - SenML message that comes from the sensor
-	// These messages are recorded in this array "as-is".
-	// Resolved version is kept in Ts array in Channel struct
-	ChannelEntry struct {
-		SenML     []senml.SenMLRecord `json:"senml"`
-		Timestamp string              `json:"timestamp"`
+		// Mainflux stuff
+		Publisher string `json:"publisher"`
+		Timestamp string `json:"timestamp"`
 	}
 
 	// Channel is a bidirectional pipe of communication
@@ -99,13 +91,11 @@ type (
 		// Owner is whoever created the channel
 		Owner string `json:"owner"`
 
-		Entries []ChannelEntry `json:"entries"`
-
-		// Time Series
 		// Concatenated array of resolved SenML entries,
 		// separated by measurement (i.e. each measurement is one
-		// member of the array)
-		Ts []senml.SenMLRecord `json:"ts"`
+		// member of the array),
+		// With addition of Mainflux admin data
+		Entries []ChannelEntry `json:"entries"`
 
 		Created string `json:"created"`
 		Updated string `json:"updated"`

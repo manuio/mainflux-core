@@ -205,6 +205,79 @@ func getChannel(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, string(res))
 }
 
+// Removes all the base items and expands records to have items that include
+// what previosly in base iterms. Convets relative times to absoltue times.
+// Only Base Name is omitted and added to every record alonside with the "n"
+// So we can have distinct Base Name and Name for querying database.
+func normalizeEntries(senml senml.SenML) []models.ChannelEntry {
+	var bname string = ""
+	var btime float64 = 0
+	var bunit string = ""
+	//var ver = 5
+	var ret []models.ChannelEntry
+
+	var totalRecords int = 0
+	for _, r := range senml.Records {
+		if (r.Value != nil) || (len(r.StringValue) > 0) || (r.BoolValue != nil) {
+			totalRecords += 1
+		}
+	}
+
+	ret = make([]models.ChannelEntry, totalRecords)
+	var numRecords = 0
+
+	for _, r := range senml.Records {
+		if r.BaseTime != 0 {
+			btime = r.BaseTime
+		}
+		if len(r.BaseUnit) > 0 {
+			bunit = r.BaseUnit
+		}
+		if len(r.BaseName) > 0 {
+			bname = r.BaseName
+		} else {
+			r.BaseName = bname
+		}
+		r.BaseTime = 0
+		r.BaseUnit = ""
+		r.Time = btime + r.Time
+		if len(r.Unit) == 0 {
+			r.Unit = bunit
+		}
+		//r.BaseVersion = ver
+
+		if r.Time <= 0 {
+			// convert to absolute time
+			var now int64 = time.Now().UnixNano()
+			var t int64 = now / 1000000000.0
+			r.Time = float64(t) + r.Time
+		}
+
+		if (r.Value != nil) || (len(r.StringValue) > 0) || (r.BoolValue != nil) {
+			// Copy SenMLRecord struct to ChannelEntry
+			b, err := json.Marshal(r)
+			if err != nil {
+				log.Print(err)
+			}
+			if err := json.Unmarshal(b, &ret[numRecords]); err != nil {
+			}
+
+			////
+			// Mainflux Stuff
+			////
+			ret[numRecords].Publisher = bname
+			// Timestamp
+			t := time.Now().UTC().Format(time.RFC3339)
+			ret[numRecords].Timestamp = t
+
+			// Go to next record
+			numRecords += 1
+		}
+	}
+
+	return ret
+}
+
 // writeChannel function
 // Generic function that updates the channel value.
 // Can be called via various protocols.
@@ -225,32 +298,15 @@ func writeChannel(id string, data []byte) {
 		return
 	}
 
-	// Add the "raw" SenML message to channel Entries
-	e := models.ChannelEntry{}
-	e.SenML = make([]senml.SenMLRecord, len(m.Records))
-	copy(e.SenML, m.Records)
-	// Timestamp
-	t := time.Now().UTC().Format(time.RFC3339)
-	e.Timestamp = t
-
-	if err := Db.C("channels").Update(bson.M{"id": id},
-		bson.M{"$push": bson.M{"entries": e}, "$set": bson.M{"updated": t}}); err != nil {
-		log.Print(err)
-		s.Nb = http.StatusNotFound
-		s.Str = "Not inserted"
-		fmt.Println(s.Nb, s.Str)
-		return
-	}
-
-	// Normalize (i.e. resolve) SenML
-	n := senml.Normalize(m)
+	// Normalize (i.e. resolve) SenMLRecord
+	e := normalizeEntries(m)
 
 	/** Insert entry in DB */
 	colQuerier := bson.M{"id": id}
 	// Timestamp
-	t = time.Now().UTC().Format(time.RFC3339)
+	t := time.Now().UTC().Format(time.RFC3339)
 	// Append entry to exiting array
-	change := bson.M{"$push": bson.M{"ts": bson.M{"$each": n.Records}}, "$set": bson.M{"updated": t}}
+	change := bson.M{"$push": bson.M{"entries": bson.M{"$each": e}}, "$set": bson.M{"updated": t}}
 	if err := Db.C("channels").Update(colQuerier, change); err != nil {
 		log.Print(err)
 		s.Nb = http.StatusNotFound
