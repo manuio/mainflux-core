@@ -51,7 +51,7 @@ func (mqc *MqttConn) MqttSub(cfg config.Config) {
 	// at a maximum qos of zero, wait for the receipt to confirm the subscription
 	// Topic is in the form:
 	// mainflux/devices/<device_id>/channels/<channel_id>
-	if token := mqc.Client.Subscribe("mainflux/devices/+/channels/+", 0, nil); token.Wait() && token.Error() != nil {
+	if token := mqc.Client.Subscribe("mainflux/channels/+", 0, nil); token.Wait() && token.Error() != nil {
 		fmt.Println(token.Error())
 	}
 

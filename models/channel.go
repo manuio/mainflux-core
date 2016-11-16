@@ -90,11 +90,14 @@ type (
 	Channel struct {
 		ID string `json:"id"`
 
-		// ID of device to which this channel belongs to.
-		// Channels always belong to one device which uses them to
-		// publish the info of it's properties, or to listen on them
-		// messages that applications send to this device.
-		Device string `json:"device"`
+		// Visibility:
+		// - private
+		// - protected
+		// - public
+		Visibility string `json:"visibility"`
+
+		// Owner is whoever created the channel
+		Owner string `json:"owner"`
 
 		Entries []ChannelEntry `json:"entries"`
 
