@@ -1,12 +1,12 @@
-hash: 3968c5a0c9d068eaaca53e58d4e2ef653efd0a9293244975b5767ca76fe5cf18
-updated: 2016-11-20T17:44:07.754708565+01:00
+hash: 56bdc6202fdf4314ce8afeaac0c101b579fff9ad4706fc284fb742ac4a5fc30f
+updated: 2016-11-20T17:58:19.02528086+01:00
 imports:
 - name: github.com/BurntSushi/toml
   version: bbd5bb678321a0d6e58f1099321dfa73391c1b6f
 - name: github.com/cisco/senml
   version: 157479c25a2fcba03d0eb9d5bb237a079e4a07cb
 - name: github.com/eclipse/paho.mqtt.golang
-  version: 45f9b18f4864c81d49c3ed01e5faec9eeb05de31
+  version: 13afcbe8e41508479762a90e9242577210c2ca8d
   subpackages:
   - packets
 - name: github.com/fatih/color
