@@ -1,20 +1,18 @@
-hash: a5221fbf276abcffac11722247a0fa63bd6417e8eb4eb12525bc2ea9267837c9
-updated: 2016-11-20T03:41:48.592562075+01:00
+hash: 3968c5a0c9d068eaaca53e58d4e2ef653efd0a9293244975b5767ca76fe5cf18
+updated: 2016-11-20T17:44:07.754708565+01:00
 imports:
 - name: github.com/BurntSushi/toml
   version: bbd5bb678321a0d6e58f1099321dfa73391c1b6f
 - name: github.com/cisco/senml
   version: 157479c25a2fcba03d0eb9d5bb237a079e4a07cb
 - name: github.com/eclipse/paho.mqtt.golang
-  version: 13afcbe8e41508479762a90e9242577210c2ca8d
+  version: 45f9b18f4864c81d49c3ed01e5faec9eeb05de31
   subpackages:
   - packets
 - name: github.com/fatih/color
-  version: 87d4004f2ab62d0d255e0a38f1680aa534549fe3
+  version: dea9d3a26a087187530244679c1cfb3a42937794
 - name: github.com/go-zoo/bone
   version: fd0aebc74e908868b09ac140fb5a53cb363884c1
-- name: github.com/krylovsk/gosenml
-  version: 58b3dba4d56feb12e121868a4468ad3443334d3b
 - name: github.com/mattn/go-colorable
   version: d228849504861217f796da67fae4f6e347643f15
 - name: github.com/mattn/go-isatty
