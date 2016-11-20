@@ -72,8 +72,10 @@ func createDevice(w http.ResponseWriter, r *http.Request) {
 	d := models.Device{Name: "Some Name", Online: false}
 	if err := json.Unmarshal(data, &d); err != nil {
 		println("Cannot decode!")
-		log.Print(err.Error())
-		panic(err)
+		w.WriteHeader(http.StatusBadRequest)
+		str := `{"response": "cannot decode body"}`
+		io.WriteString(w, str)
+		return
 	}
 
 	// Creating UUID Version 4
@@ -94,7 +96,7 @@ func createDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusCreated)
 	str := `{"response": "created", "id": "` + d.ID + `"}`
 	io.WriteString(w, str)
 }
@@ -135,9 +137,6 @@ func getDevice(w http.ResponseWriter, r *http.Request) {
 		log.Print(err)
 		w.WriteHeader(http.StatusNotFound)
 		str := `{"response": "not found", "id": "` + id + `"}`
-		if err != nil {
-			log.Print(err)
-		}
 		io.WriteString(w, str)
 		return
 	}

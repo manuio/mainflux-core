@@ -1,0 +1,223 @@
+swagger: '2.0'
+info:
+  title: Mainflux Core API
+  description: Mainflux IoT platform core service API.
+  version: "1.0.0"
+schemes:
+  - http
+  - https
+produces:
+  - application/json
+paths:
+  /status:
+    get:
+      summary: Service health check
+      description: |
+        The endpoint returns information about the service status, i.e. whether
+        or not it is capable to respond to any incoming request.
+      tags:
+        - Status
+      responses:
+        200:
+          description: Service is alive and able to respond to new requests.
+          schema:
+            $ref: '#/definitions/HealthCheck'
+        500:
+          description: Service cannot fulfill any further requests.
+  /devices:
+    post:
+      summary: Provision new device
+      description: |
+        New devices are registered. Once the device is created,
+        it is provided with an UUID (used for suthenticating device onto the system).
+      tags:
+        - Devices
+      parameters:
+        - name: credentials
+          in: body
+          description: Account credentials.
+          schema:
+            $ref: '#/definitions/UserPass'
+      responses:
+        201:
+          description: Device is created.
+          schema:
+            $ref: '#/definitions/Devices'
+        400:
+          description: Missing or invalid username and/or password.
+        409:
+          description: Provided username is not unique.
+        500:
+          description: Server-side error occurred.
+    get:
+      summary: Provision new channel
+      description: |
+        New devices are registered. Once the device is created,
+        it is provided with an UUID (used for suthenticating device onto the system).
+      tags:
+        - Devices
+      parameters:
+        - name: credentials
+          in: body
+          description: Account credentials.
+          schema:
+            $ref: '#/definitions/UserPass'
+      responses:
+        201:
+          description: Device is created.
+          schema:
+            $ref: '#/definitions/Channels'
+        405:
+          description: Device not found.
+        500:
+          description: Server-side error occurred.
+  /devices/{device_id}:
+    post:
+      summary: Provision new device
+      description: |
+        New devices are registered. Once the device is created,
+        it is provided with an UUID (used for suthenticating device onto the system).
+      tags:
+        - Devices
+      parameters:
+        - name: credentials
+          in: body
+          description: Account credentials.
+          schema:
+            $ref: '#/definitions/UserPass'
+      responses:
+        201:
+          description: Device is created.
+          schema:
+            $ref: '#/definitions/Devices'
+        400:
+          description: Missing or invalid username and/or password.
+        409:
+          description: Provided username is not unique.
+        500:
+          description: Server-side error occurred.
+    get:
+      summary: Provision new channel
+      description: |
+        New devices are registered. Once the device is created,
+        it is provided with an UUID (used for suthenticating device onto the system).
+      tags:
+        - Devices
+      parameters:
+        - name: credentials
+          in: body
+          description: Account credentials.
+          schema:
+            $ref: '#/definitions/UserPass'
+      responses:
+        201:
+          description: Device is created.
+          schema:
+            $ref: '#/definitions/Channels'
+        400:
+          description: Missing or invalid username and/or password.
+        409:
+          description: Provided username is not unique.
+        500:
+          description: Server-side error occurred.
+  /channels:
+    post:
+      summary: Provision new channel
+      description: |
+        New devices are registered. Once the device is created,
+        it is provided with an UUID (used for suthenticating device onto the system).
+      tags:
+        - Devices
+      parameters:
+        - name: credentials
+          in: body
+          description: Account credentials.
+          schema:
+            $ref: '#/definitions/UserPass'
+      responses:
+        201:
+          description: Device is created.
+          schema:
+            $ref: '#/definitions/Channels'
+        400:
+          description: Missing or invalid username and/or password.
+        409:
+          description: Provided username is not unique.
+        500:
+          description: Server-side error occurred.
+    get:
+      summary: Provision new channel
+      description: |
+        New devices are registered. Once the device is created,
+        it is provided with an UUID (used for suthenticating device onto the system).
+      tags:
+        - Devices
+      parameters:
+        - name: credentials
+          in: body
+          description: Account credentials.
+          schema:
+            $ref: '#/definitions/UserPass'
+      responses:
+        201:
+          description: Device is created.
+          schema:
+            $ref: '#/definitions/Channels'
+        400:
+          description: Missing or invalid username and/or password.
+        409:
+          description: Provided username is not unique.
+        500:
+          description: Server-side error occurred.
+  /channels/{channel_id}:
+    post:
+      summary: Provision new channel
+      description: |
+        New devices are registered. Once the device is created,
+        it is provided with an UUID (used for suthenticating device onto the system).
+      tags:
+        - Devices
+      parameters:
+        - name: credentials
+          in: body
+          description: Account credentials.
+          schema:
+            $ref: '#/definitions/UserPass'
+      responses:
+        201:
+          description: Device is created.
+          schema:
+            $ref: '#/definitions/Channels'
+        400:
+          description: Missing or invalid username and/or password.
+        409:
+          description: Provided username is not unique.
+        500:
+          description: Server-side error occurred.
+    get:
+      summary: Provision new channel
+      description: |
+        New devices are registered. Once the device is created,
+        it is provided with an UUID (used for suthenticating device onto the system).
+      tags:
+        - Devices
+      parameters:
+        - name: credentials
+          in: body
+          description: Account credentials.
+          schema:
+            $ref: '#/definitions/UserPass'
+      responses:
+        201:
+          description: Device is created.
+          schema:
+            $ref: '#/definitions/Channels'
+        400:
+          description: Missing or invalid username and/or password.
+        409:
+          description: Provided username is not unique.
+        500:
+          description: Server-side error occurred.
+ 
+ 
+
