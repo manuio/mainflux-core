@@ -1,46 +1,46 @@
 hash: a5221fbf276abcffac11722247a0fa63bd6417e8eb4eb12525bc2ea9267837c9
-updated: 2016-11-15T22:23:28.318053347+01:00
+updated: 2016-11-20T03:41:48.592562075+01:00
 imports:
 - name: github.com/BurntSushi/toml
-  version: ""
+  version: bbd5bb678321a0d6e58f1099321dfa73391c1b6f
 - name: github.com/cisco/senml
   version: 157479c25a2fcba03d0eb9d5bb237a079e4a07cb
 - name: github.com/eclipse/paho.mqtt.golang
-  version: ""
+  version: 13afcbe8e41508479762a90e9242577210c2ca8d
   subpackages:
   - packets
 - name: github.com/fatih/color
-  version: ""
+  version: 87d4004f2ab62d0d255e0a38f1680aa534549fe3
 - name: github.com/go-zoo/bone
-  version: ""
+  version: fd0aebc74e908868b09ac140fb5a53cb363884c1
 - name: github.com/krylovsk/gosenml
-  version: 622f37da9cd8a55aa7ef7f06d0be90dce110dca8
+  version: 58b3dba4d56feb12e121868a4468ad3443334d3b
 - name: github.com/mattn/go-colorable
-  version: 622f37da9cd8a55aa7ef7f06d0be90dce110dca8
+  version: d228849504861217f796da67fae4f6e347643f15
 - name: github.com/mattn/go-isatty
-  version: 622f37da9cd8a55aa7ef7f06d0be90dce110dca8
+  version: 66b8e73f3f5cda9f96b69efd03dd3d7fc4a5cdb8
 - name: github.com/satori/go.uuid
-  version: ""
+  version: 879c5887cd475cd7864858769793b2ceb0d44feb
 - name: github.com/ugorji/go
   version: faddd6128c66c4708f45fdc007f575f75e592a3c
   subpackages:
   - codec
 - name: github.com/xeipuuv/gojsonpointer
-  version: 622f37da9cd8a55aa7ef7f06d0be90dce110dca8
+  version: e0fe6f68307607d540ed8eac07a342c33fa1b54a
 - name: github.com/xeipuuv/gojsonreference
-  version: 622f37da9cd8a55aa7ef7f06d0be90dce110dca8
+  version: e02fc20de94c78484cd5ffb007f8af96be030a45
 - name: github.com/xeipuuv/gojsonschema
-  version: 622f37da9cd8a55aa7ef7f06d0be90dce110dca8
+  version: e18f0065e8c148fcf567ac43a3f8f5b66ac0720b
 - name: golang.org/x/net
-  version: 622f37da9cd8a55aa7ef7f06d0be90dce110dca8
+  version: 4971afdc2f162e82d185353533d3cf16188a9f4e
   subpackages:
   - websocket
 - name: golang.org/x/sys
-  version: 622f37da9cd8a55aa7ef7f06d0be90dce110dca8
+  version: b699b7032584f0953262cb2788a0ca19bb494703
   subpackages:
   - unix
 - name: gopkg.in/mgo.v2
-  version: 622f37da9cd8a55aa7ef7f06d0be90dce110dca8
+  version: 3f83fa5005286a7fe593b055f0d7771a7dce4655
   subpackages:
   - bson
   - internal/json
@@ -48,18 +48,18 @@ imports:
   - internal/scram
 testImports:
 - name: github.com/go-errors/errors
-  version: 622f37da9cd8a55aa7ef7f06d0be90dce110dca8
+  version: a41850380601eeb43f4350f7d17c6bbd8944aaf8
 - name: github.com/go-sql-driver/mysql
-  version: ""
+  version: 0b58b37b664c21f3010e836f1b931e1d0b0b0685
 - name: github.com/lib/pq
-  version: 622f37da9cd8a55aa7ef7f06d0be90dce110dca8
+  version: d8eeeb8bae8896dd8e1b7e514ab0d396c4f12a1b
   subpackages:
   - oid
 - name: github.com/ory-am/common
-  version: 622f37da9cd8a55aa7ef7f06d0be90dce110dca8
+  version: d93c852f2d09c219fd058756caf67bbdf8cf4be4
   subpackages:
   - env
 - name: github.com/ory-am/dockertest
-  version: ""
+  version: edb9d9444e6868c1b1e279098b628e7b8e6f0714
 - name: github.com/pborman/uuid
-  version: ""
+  version: a97ce2ca70fa5a848076093f05e639a89ca34d06
