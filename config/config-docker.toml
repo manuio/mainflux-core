@@ -16,5 +16,5 @@ mongoPort = 27017
 mongoDatabase = "mainflux"
 
 # MQTT
-mqttHost = "emqttd"
+mqttHost = "mainflux-mqtt"
 mqttPort = 1883
