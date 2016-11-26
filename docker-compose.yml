@@ -18,15 +18,23 @@ mongo:
   command: --smallfiles --nojournal
 
 ###
-# Emqttd
+# Redis
 ###
-emqttd:
-  image: mainflux/emqttd-docker:latest
-  container_name: mainflux-emqttd
+redis:
+  image: redis:latest
+  container_name: mainflux-redis
+  ports:
+    - "6379:6379"
+
+###
+# Mainflux MQTT Broker
+###
+mainflux-mqtt:
+  image: mainflux/mainflux-mqtt:latest
+  container_name: mainflux-mqtt
   ports:
     - "1883:1883"
-    - "8083:8083"
-    - "18083:18083"
+    - "8883:8883"
 
 ###
 # Mainflux Core Server
@@ -36,6 +44,7 @@ mainflux-core:
   container_name: mainflux-core
   links:
     - mongo
-    - emqttd
+    - redis
+    - mainflux-mqtt
   ports:
     - "7070:7070"

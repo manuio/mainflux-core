@@ -68,6 +68,11 @@ func createDevice(w http.ResponseWriter, r *http.Request) {
 	Db.Init()
 	defer Db.Close()
 
+	// Redis
+	redis := db.Redis{}
+	redis.Init()
+	defer redis.Close()
+
 	// Set up defaults and pick up new values from user-provided JSON
 	d := models.Device{Name: "Some Name", Online: false}
 	if err := json.Unmarshal(data, &d); err != nil {

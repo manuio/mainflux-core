@@ -116,6 +116,9 @@ func main() {
 	// MongoDb
 	db.InitMongo(cfg.MongoHost, cfg.MongoPort, cfg.MongoDatabase)
 
+	// Redis
+	db.InitRedis(cfg.RedisHost, cfg.RedisPort)
+
 	// MQTT
 	mqc := new(api.MqttConn)
 	//Sub to everything coming on all channels of all devices

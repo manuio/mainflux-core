@@ -74,6 +74,11 @@ func createChannel(w http.ResponseWriter, r *http.Request) {
 	Db.Init()
 	defer Db.Close()
 
+	// Redis
+	redis := db.Redis{}
+	redis.Init()
+	defer redis.Close()
+
 	c := models.Channel{Visibility: "private", Owner: ""}
 	if len(data) > 0 {
 		if err := json.Unmarshal(data, &c); err != nil {

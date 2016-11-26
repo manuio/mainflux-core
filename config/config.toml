@@ -15,6 +15,10 @@ mongoHost = "localhost"
 mongoPort = 27017
 mongoDatabase = "mainflux"
 
+# Redis
+redisHost = "localhost"
+redisPort = 6379
+
 # MQTT
 mqttHost = "localhost"
 mqttPort = 1883
