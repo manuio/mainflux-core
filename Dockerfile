@@ -39,6 +39,6 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
 ###
 CMD dockerize -wait tcp://$MONGO_HOST:$MONGO_PORT \
 				-wait tcp://$MQTT_HOST:$MQTT_PORT \
-				-wait nats://$NATS_HOST:$NATS_PORT \
+				-wait tcp://$NATS_HOST:$NATS_PORT \
 				-timeout 10s /go/bin/mainflux-core /etc/mainflux/core/config.toml
 
