@@ -16,8 +16,8 @@ mongoPort = 27017
 mongoDatabase = "mainflux"
 
 # NATS
-redisHost = "nats"
-redisPort = 4222
+natsHost = "nats"
+natsPort = 4222
 
 # MQTT
 mqttHost = "mainflux-mqtt"
