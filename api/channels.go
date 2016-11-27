@@ -92,6 +92,11 @@ func createChannel(w http.ResponseWriter, r *http.Request) {
 
 	c.ID = uuid.String()
 
+	// Publish info on Redis
+	hdr := r.Header.Get("Authorization")
+	msg := `{"type": "channel", "id": "` + c.ID + `", "owner": "` + hdr + `"}`
+	redis.Publish("core", msg)
+
 	// Timestamp
 	t := time.Now().UTC().Format(time.RFC3339)
 

@@ -89,6 +89,11 @@ func createDevice(w http.ResponseWriter, r *http.Request) {
 
 	d.ID = uuid.String()
 
+	// Publish info on Redis
+	hdr := r.Header.Get("Authorization")
+	msg := `{"type": "device", "id": "` + d.ID + `", "owner": "` + hdr + `"}`
+	redis.Publish("core", msg)
+
 	// Timestamp
 	t := time.Now().UTC().Format(time.RFC3339)
 	d.Created, d.Updated = t, t

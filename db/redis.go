@@ -50,6 +50,12 @@ func (r *Redis) Init() error {
 	return err
 }
 
+// Publish publishes message
+func (r *Redis) Publish(c string, msg string) error {
+	_, err := r.Conn.Do("PUBLISH", c, msg)
+	return err
+}
+
 // Close closes current connection
 func (r *Redis) Close() error {
 	return r.Conn.Close()
