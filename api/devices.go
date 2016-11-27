@@ -39,16 +39,11 @@ func createDevice(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	if len(data) == 0 {
-		w.WriteHeader(http.StatusBadRequest)
-		str := `{"response": "no data provided"}`
-		io.WriteString(w, str)
-		return
-	}
-
-	var body map[string]interface{}
-	if err := json.Unmarshal(data, &body); err != nil {
-		panic(err)
+	if len(data) > 0 {
+		var body map[string]interface{}
+		if err := json.Unmarshal(data, &body); err != nil {
+			panic(err)
+		}
 	}
 
 	/*
@@ -70,12 +65,14 @@ func createDevice(w http.ResponseWriter, r *http.Request) {
 
 	// Set up defaults and pick up new values from user-provided JSON
 	d := models.Device{Name: "Some Name", Online: false}
-	if err := json.Unmarshal(data, &d); err != nil {
-		println("Cannot decode!")
-		w.WriteHeader(http.StatusBadRequest)
-		str := `{"response": "cannot decode body"}`
-		io.WriteString(w, str)
-		return
+	if len(data) > 0 {
+		if err := json.Unmarshal(data, &d); err != nil {
+			println("Cannot decode!")
+			w.WriteHeader(http.StatusBadRequest)
+			str := `{"response": "cannot decode body"}`
+			io.WriteString(w, str)
+			return
+		}
 	}
 
 	// Creating UUID Version 4
