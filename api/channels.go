@@ -74,11 +74,6 @@ func createChannel(w http.ResponseWriter, r *http.Request) {
 	Db.Init()
 	defer Db.Close()
 
-	// Redis
-	redis := db.Redis{}
-	redis.Init()
-	defer redis.Close()
-
 	c := models.Channel{Visibility: "private", Owner: ""}
 	if len(data) > 0 {
 		if err := json.Unmarshal(data, &c); err != nil {
@@ -92,11 +87,6 @@ func createChannel(w http.ResponseWriter, r *http.Request) {
 
 	c.ID = uuid.String()
 
-	// Publish info on Redis
-	hdr := r.Header.Get("Authorization")
-	msg := `{"type": "channel", "id": "` + c.ID + `", "owner": "` + hdr + `"}`
-	redis.Publish("core", msg)
-
 	// Timestamp
 	t := time.Now().UTC().Format(time.RFC3339)
 
@@ -109,6 +99,12 @@ func createChannel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Publish on NATS
+	hdr := r.Header.Get("Authorization")
+	msg := `{"type": "channel", "id":"` + c.ID + `", "owner": "` + hdr + `"}`
+	NatsConn.Publish("core-auth", []byte(msg))
+
+	// Send RSP
 	w.WriteHeader(http.StatusOK)
 	str := `{"response": "created", "id": "` + c.ID + `"}`
 	io.WriteString(w, str)

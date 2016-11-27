@@ -116,8 +116,8 @@ func main() {
 	// MongoDb
 	db.InitMongo(cfg.MongoHost, cfg.MongoPort, cfg.MongoDatabase)
 
-	// Redis
-	db.InitRedis(cfg.RedisHost, cfg.RedisPort)
+	// NATS
+	api.InitNats(cfg.NatsHost, cfg.NatsPort)
 
 	// MQTT
 	mqc := new(api.MqttConn)

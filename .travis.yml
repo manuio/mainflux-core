@@ -19,7 +19,6 @@ sudo: required
 # Enable docker
 services:
   - docker
-  - redis-server
 
 # In Travis, we need to bind to 127.0.0.1 in order to get a working connection. This environment variable
 # tells dockertest to do that.

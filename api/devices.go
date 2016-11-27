@@ -68,11 +68,6 @@ func createDevice(w http.ResponseWriter, r *http.Request) {
 	Db.Init()
 	defer Db.Close()
 
-	// Redis
-	redis := db.Redis{}
-	redis.Init()
-	defer redis.Close()
-
 	// Set up defaults and pick up new values from user-provided JSON
 	d := models.Device{Name: "Some Name", Online: false}
 	if err := json.Unmarshal(data, &d); err != nil {
@@ -89,11 +84,6 @@ func createDevice(w http.ResponseWriter, r *http.Request) {
 
 	d.ID = uuid.String()
 
-	// Publish info on Redis
-	hdr := r.Header.Get("Authorization")
-	msg := `{"type": "device", "id": "` + d.ID + `", "owner": "` + hdr + `"}`
-	redis.Publish("core", msg)
-
 	// Timestamp
 	t := time.Now().UTC().Format(time.RFC3339)
 	d.Created, d.Updated = t, t
@@ -106,6 +96,12 @@ func createDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Publish on NATS
+	hdr := r.Header.Get("Authorization")
+	msg := `{"type": "device", "id":"` + d.ID + `", "owner": "` + hdr + `"}`
+	NatsConn.Publish("core-auth", []byte(msg))
+
+	// Send RSP
 	w.WriteHeader(http.StatusCreated)
 	str := `{"response": "created", "id": "` + d.ID + `"}`
 	io.WriteString(w, str)

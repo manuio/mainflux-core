@@ -25,13 +25,13 @@ type Config struct {
 	MongoPort     int
 	MongoDatabase string
 
-	// Redis
-	RedisHost string
-	RedisPort int
-
 	// MQTT
 	MQTTHost string
 	MQTTPort int
+
+	// NATS
+	NatsHost string
+	NatsPort int
 
 	// Influx
 	InfluxHost     string

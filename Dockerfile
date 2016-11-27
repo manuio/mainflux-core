@@ -8,8 +8,8 @@ MAINTAINER Mainflux
 ENV MONGO_HOST mongo
 ENV MONGO_PORT 27017
 
-ENV REDIS_HOST redis
-ENV REDIS_PORT 6379
+ENV NATS_HOST nats
+ENV NATS_PORT 4222
 
 ENV MQTT_HOST mainflux-mqtt
 ENV MQTT_PORT 1883
@@ -39,6 +39,6 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
 ###
 CMD dockerize -wait tcp://$MONGO_HOST:$MONGO_PORT \
 				-wait tcp://$MQTT_HOST:$MQTT_PORT \
-				-wait tcp://$REDIS_HOST:$REDIS_PORT \
+				-wait tcp://$NATS_HOST:$NATS_PORT \
 				-timeout 10s /go/bin/mainflux-core /etc/mainflux/core/config.toml
 
