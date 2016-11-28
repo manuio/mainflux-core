@@ -33,9 +33,9 @@ paths:
       tags:
         - Devices
       parameters:
-        - name: credentials
+        - name: name
           in: body
-          description: Account credentials.
+          description: Device name.
           schema:
             $ref: '#/definitions/UserPass'
       responses:
@@ -50,10 +50,9 @@ paths:
         500:
           description: Server-side error occurred.
     get:
-      summary: Provision new channel
+      summary: Get all devices
       description: |
-        New devices are registered. Once the device is created,
-        it is provided with an UUID (used for suthenticating device onto the system).
+        Get all devices provisioned in the system.
       tags:
         - Devices
       parameters:
@@ -72,11 +71,10 @@ paths:
         500:
           description: Server-side error occurred.
   /devices/{device_id}:
-    post:
-      summary: Provision new device
+    put:
+      summary: Update device
       description: |
-        New devices are registered. Once the device is created,
-        it is provided with an UUID (used for suthenticating device onto the system).
+        Update device by device ID. 
       tags:
         - Devices
       parameters:
@@ -97,10 +95,9 @@ paths:
         500:
           description: Server-side error occurred.
     get:
-      summary: Provision new channel
+      summary: Get device
       description: |
-        New devices are registered. Once the device is created,
-        it is provided with an UUID (used for suthenticating device onto the system).
+        Get device by device ID.
       tags:
         - Devices
       parameters:
@@ -124,10 +121,10 @@ paths:
     post:
       summary: Provision new channel
       description: |
-        New devices are registered. Once the device is created,
-        it is provided with an UUID (used for suthenticating device onto the system).
+        New channel is registered. Once the channel is created,
+        it is provided with an UUID (used for identifying this channel in the system).
       tags:
-        - Devices
+        - Channels
       parameters:
         - name: credentials
           in: body
@@ -146,12 +143,11 @@ paths:
         500:
           description: Server-side error occurred.
     get:
-      summary: Provision new channel
+      summary: Get all channels
       description: |
-        New devices are registered. Once the device is created,
-        it is provided with an UUID (used for suthenticating device onto the system).
+        Get all provisioned channels.
       tags:
-        - Devices
+        - Channels
       parameters:
         - name: credentials
           in: body
@@ -170,13 +166,12 @@ paths:
         500:
           description: Server-side error occurred.
   /channels/{channel_id}:
-    post:
-      summary: Provision new channel
+    put:
+      summary: Update channel
       description: |
-        New devices are registered. Once the device is created,
-        it is provided with an UUID (used for suthenticating device onto the system).
+        Update channel by channel ID.
       tags:
-        - Devices
+        - Channels
       parameters:
         - name: credentials
           in: body
@@ -195,12 +190,11 @@ paths:
         500:
           description: Server-side error occurred.
     get:
-      summary: Provision new channel
+      summary: Get the channel
       description: |
-        New devices are registered. Once the device is created,
-        it is provided with an UUID (used for suthenticating device onto the system).
+        Get the channel by channel ID.
       tags:
-        - Devices
+        - Channels
       parameters:
         - name: credentials
           in: body
