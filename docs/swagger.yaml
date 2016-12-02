@@ -78,6 +78,11 @@ paths:
       tags:
         - Devices
       parameters:
+        - name: device_id
+          in: path
+          required: true
+          type: integer
+          description: Device Id.
         - name: credentials
           in: body
           description: Account credentials.
@@ -101,6 +106,11 @@ paths:
       tags:
         - Devices
       parameters:
+        - name: device_id
+          in: path
+          required: true
+          type: integer
+          description: Device Id.
         - name: credentials
           in: body
           description: Account credentials.
@@ -173,6 +183,11 @@ paths:
       tags:
         - Channels
       parameters:
+        - name: channel_id
+          in: path
+          required: true
+          type: integer
+          description: Channel Id.
         - name: credentials
           in: body
           description: Account credentials.
@@ -196,6 +211,11 @@ paths:
       tags:
         - Channels
       parameters:
+        - name: channel_id
+          in: path
+          required: true
+          type: integer
+          description: Channel Id.
         - name: credentials
           in: body
           description: Account credentials.
@@ -212,6 +232,29 @@ paths:
           description: Provided username is not unique.
         500:
           description: Server-side error occurred.
- 
- 
 
+definitions:
+  HealthCheck:
+    type: object
+    properties:
+      state:
+        type: string
+        description: HealthCheck description
+  UserPass:
+    type: object
+    properties:
+      pass:
+        type: string
+        description: UserPass description
+  Devices:
+    type: object
+    properties:
+      devices-list:
+        type: object
+        description: Devices description
+  Channels:
+    type: object
+    properties:
+      channel-list:
+        type: object
+        description: Channels description
