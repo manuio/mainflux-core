@@ -39,14 +39,14 @@ paths:
       parameters:
         - name: name
           in: body
-          description: Device name.
           schema:
-            $ref: '#/definitions/Device'
+            type: string
+          description: Device name.
       responses:
         201:
           description: Device is created.
           schema:
-            $ref: '#/definitions/DeviceRsp'
+            $ref: '#/definitions/DevicesRsp'
         400:
           description: Missing or invalid username and/or password.
         409:
@@ -123,6 +123,7 @@ paths:
       responses:
         201:
           description: Channel is created.
+          schema:
             $ref: '#/definitions/ChannelsRsp'
         500:
           description: Server-side error occurred.
@@ -132,6 +133,17 @@ paths:
         Get all provisioned channels.
       tags:
         - Channels
+      parameters:
+        - name: climit
+          in: query
+          required: true
+          type: integer
+          description: Channel Limit - limits the number of retrieved channels.
+        - name: elimit
+          in: query
+          required: true
+          type: integer
+          description: Entry Limit - limits the nb of retrieved channel entries.
       responses:
         201:
           description: Channels retrieved.
@@ -176,6 +188,11 @@ paths:
           required: true
           type: integer
           description: Channel Id.
+        - name: elimit
+          in: query
+          required: true
+          type: integer
+          description: Entry Limit - limits the nb of retrieved channel entries.
       responses:
         201:
           description: Device retrieved.
@@ -209,12 +226,6 @@ definitions:
       devices-list:
         type: object
         description: Devices description
-  Channel:
-    type: object
-    properties:
-      channel-list:
-        type: object
-        description: Channel description
   Channels:
     type: object
     properties:
@@ -227,4 +238,11 @@ definitions:
       channel-list:
         type: object
         description: ChannelsRsp description
+  SenML:
+    type: object
+    properties:
+      channel-list:
+        type: object
+        description: SenML description
+
 
