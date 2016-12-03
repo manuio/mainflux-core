@@ -1,13 +1,17 @@
 swagger: '2.0'
+
 info:
   title: Mainflux Core API
   description: Mainflux IoT platform core service API.
-  version: "1.0.0"
+  version: "0.0.1"
+
 schemes:
   - http
   - https
+
 produces:
   - application/json
+
 paths:
   /status:
     get:
@@ -21,7 +25,7 @@ paths:
         200:
           description: Service is alive and able to respond to new requests.
           schema:
-            $ref: '#/definitions/HealthCheck'
+            $ref: '#/definitions/Status'
         500:
           description: Service cannot fulfill any further requests.
   /devices:
@@ -37,12 +41,12 @@ paths:
           in: body
           description: Device name.
           schema:
-            $ref: '#/definitions/UserPass'
+            $ref: '#/definitions/Device'
       responses:
         201:
           description: Device is created.
           schema:
-            $ref: '#/definitions/Devices'
+            $ref: '#/definitions/DeviceRsp'
         400:
           description: Missing or invalid username and/or password.
         409:
@@ -55,17 +59,11 @@ paths:
         Get all devices provisioned in the system.
       tags:
         - Devices
-      parameters:
-        - name: credentials
-          in: body
-          description: Account credentials.
-          schema:
-            $ref: '#/definitions/UserPass'
       responses:
         201:
-          description: Device is created.
+          description: Devices retrieved.
           schema:
-            $ref: '#/definitions/Channels'
+            $ref: '#/definitions/Devices'
         405:
           description: Device not found.
         500:
@@ -87,16 +85,12 @@ paths:
           in: body
           description: Account credentials.
           schema:
-            $ref: '#/definitions/UserPass'
+            $ref: '#/definitions/Device'
       responses:
         201:
           description: Device is created.
           schema:
-            $ref: '#/definitions/Devices'
-        400:
-          description: Missing or invalid username and/or password.
-        409:
-          description: Provided username is not unique.
+            $ref: '#/definitions/DevicesRsp'
         500:
           description: Server-side error occurred.
     get:
@@ -111,20 +105,11 @@ paths:
           required: true
           type: integer
           description: Device Id.
-        - name: credentials
-          in: body
-          description: Account credentials.
-          schema:
-            $ref: '#/definitions/UserPass'
       responses:
         201:
-          description: Device is created.
+          description: Device retrieved.
           schema:
-            $ref: '#/definitions/Channels'
-        400:
-          description: Missing or invalid username and/or password.
-        409:
-          description: Provided username is not unique.
+            $ref: '#/definitions/Devices'
         500:
           description: Server-side error occurred.
   /channels:
@@ -135,21 +120,10 @@ paths:
         it is provided with an UUID (used for identifying this channel in the system).
       tags:
         - Channels
-      parameters:
-        - name: credentials
-          in: body
-          description: Account credentials.
-          schema:
-            $ref: '#/definitions/UserPass'
       responses:
         201:
-          description: Device is created.
-          schema:
-            $ref: '#/definitions/Channels'
-        400:
-          description: Missing or invalid username and/or password.
-        409:
-          description: Provided username is not unique.
+          description: Channel is created.
+            $ref: '#/definitions/ChannelsRsp'
         500:
           description: Server-side error occurred.
     get:
@@ -158,21 +132,11 @@ paths:
         Get all provisioned channels.
       tags:
         - Channels
-      parameters:
-        - name: credentials
-          in: body
-          description: Account credentials.
-          schema:
-            $ref: '#/definitions/UserPass'
       responses:
         201:
-          description: Device is created.
+          description: Channels retrieved.
           schema:
             $ref: '#/definitions/Channels'
-        400:
-          description: Missing or invalid username and/or password.
-        409:
-          description: Provided username is not unique.
         500:
           description: Server-side error occurred.
   /channels/{channel_id}:
@@ -188,20 +152,16 @@ paths:
           required: true
           type: integer
           description: Channel Id.
-        - name: credentials
+        - name: entry
           in: body
-          description: Account credentials.
+          description: SenML.
           schema:
-            $ref: '#/definitions/UserPass'
+            $ref: '#/definitions/SenML'
       responses:
         201:
-          description: Device is created.
+          description: Channel updated.
           schema:
-            $ref: '#/definitions/Channels'
-        400:
-          description: Missing or invalid username and/or password.
-        409:
-          description: Provided username is not unique.
+            $ref: '#/definitions/ChannelsRsp'
         500:
           description: Server-side error occurred.
     get:
@@ -216,45 +176,55 @@ paths:
           required: true
           type: integer
           description: Channel Id.
-        - name: credentials
-          in: body
-          description: Account credentials.
-          schema:
-            $ref: '#/definitions/UserPass'
       responses:
         201:
-          description: Device is created.
+          description: Device retrieved.
           schema:
             $ref: '#/definitions/Channels'
-        400:
-          description: Missing or invalid username and/or password.
-        409:
-          description: Provided username is not unique.
         500:
           description: Server-side error occurred.
 
 definitions:
-  HealthCheck:
+  Status:
     type: object
     properties:
       state:
         type: string
-        description: HealthCheck description
-  UserPass:
+        description: Status description
+  Device:
     type: object
     properties:
-      pass:
-        type: string
-        description: UserPass description
+      devices-list:
+        type: object
+        description: Device description
   Devices:
     type: object
     properties:
       devices-list:
         type: object
         description: Devices description
+  DevicesRsp:
+    type: object
+    properties:
+      devices-list:
+        type: object
+        description: Devices description
+  Channel:
+    type: object
+    properties:
+      channel-list:
+        type: object
+        description: Channel description
   Channels:
     type: object
     properties:
       channel-list:
         type: object
         description: Channels description
+  ChannelsRsp:
+    type: object
+    properties:
+      channel-list:
+        type: object
+        description: ChannelsRsp description
+
