@@ -211,29 +211,28 @@ definitions:
         description: Status description
   Device:
     type: object
-    items:
-      properties:
-        id:
-          type: string
-          description: Id description
-        name:
-          type: string
-          description: Name description
-        description:
-          type: string
-          description: Description description
-        online:
-          type: boolean
-          description: Online description
-        connected_at:
-          type: string
-          description: ConnectedAt description
-        created:
-          type: string
-          description: Created description
-        updated:
-          type: string
-          description: Updated description
+    properties:
+      id:
+        type: string
+        description: Id description
+      name:
+        type: string
+        description: Name description
+      description:
+        type: string
+        description: Description description
+      online:
+        type: boolean
+        description: Online description
+      connected_at:
+        type: string
+        description: ConnectedAt description
+      created:
+        type: string
+        description: Created description
+      updated:
+        type: string
+        description: Updated description
   Devices:
     type: array
     items:
@@ -246,36 +245,35 @@ definitions:
         description: Response description
   Channel:
     type: object
-    items:
-      properties:
-        id:
-          type: string
-          description: Id description
-        name:
-          type: string
-          description: Name description
-        description:
-          type: string
-          description: Description description
-        owner:
-          type: string
-          description: Owner description
-        visibility:
-          type: string
-          description: Visibility description
-        entries:
-          type: array
-          items:
-            properties:
-              test:
-                type: string
-                description: Visibility description
-        created:
-          type: string
-          description: Created description
-        updated:
-          type: string
-          description: Updated description
+    properties:
+      id:
+        type: string
+        description: Id description
+      name:
+        type: string
+        description: Name description
+      description:
+        type: string
+        description: Description description
+      owner:
+        type: string
+        description: Owner description
+      visibility:
+        type: string
+        description: Visibility description
+      entries:
+        type: array
+        items:
+          properties:
+            test:
+              type: string
+              description: Visibility description
+      created:
+        type: string
+        description: Created description
+      updated:
+        type: string
+        description: Updated description
   Channels:
     type: array
     items:
