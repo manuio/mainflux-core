@@ -245,7 +245,7 @@ definitions:
         type: string
         description: Response description
   Channel:
-    type: array
+    type: object
     items:
       properties:
         id:
