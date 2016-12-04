@@ -81,7 +81,7 @@ paths:
           required: true
           type: integer
           description: Device Id.
-        - name: credentials
+        - name: device
           in: body
           description: Account credentials.
           schema:
@@ -109,7 +109,7 @@ paths:
         201:
           description: Device retrieved.
           schema:
-            $ref: '#/definitions/Devices'
+            $ref: '#/definitions/Device'
         500:
           description: Server-side error occurred.
   /channels:
@@ -136,12 +136,12 @@ paths:
       parameters:
         - name: climit
           in: query
-          required: true
+          required: false
           type: integer
           description: Channel Limit - limits the number of retrieved channels.
         - name: elimit
           in: query
-          required: true
+          required: false
           type: integer
           description: Entry Limit - limits the nb of retrieved channel entries.
       responses:
@@ -166,6 +166,7 @@ paths:
           description: Channel Id.
         - name: entry
           in: body
+          required: true
           description: SenML.
           schema:
             $ref: '#/definitions/SenML'
@@ -234,16 +235,14 @@ definitions:
           type: string
           description: Updated description
   Devices:
-    type: object
+    type: array
     items:
-      properties:
-        devices:
-          $ref: '#/definitions/Device'
+      $ref: '#/definitions/Device'
   Rsp:
     type: object
     properties:
       response:
-        type: object
+        type: string
         description: Response description
   Channel:
     type: array
@@ -278,16 +277,39 @@ definitions:
           type: string
           description: Updated description
   Channels:
-    type: object
+    type: array
+    items:
+      $ref: '#/definitions/Channel'
+  SenML:
+    type: array
     items:
       properties:
-        channels:
-          $ref: '#/definitions/Channel'
-  SenML:
-    type: object
-    properties:
-      senml:
-        type: object
-        description: SenML description
-
+        bn:
+          type: string
+        bt:
+          type: number
+        bu:
+          type: string
+        bver:
+          type: number
+        l:
+          type: string
+        n:
+          type: string
+        u:
+          type: string
+        t:
+          type: number
+        ut:
+          type: number
+        v:
+          type: number
+        vs:
+          type: string
+        vd:
+          type: string
+        vb:
+          type: boolean
+        s:
+          type: number
 
