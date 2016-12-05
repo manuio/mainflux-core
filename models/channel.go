@@ -101,7 +101,7 @@ type (
 		Entries []ChannelEntry `json:"entries"`
 
 		// Devices that have plugged in this channel
-		Devices []string
+		Devices []string `json:"devices"`
 
 		Created string `json:"created"`
 		Updated string `json:"updated"`
