@@ -100,6 +100,9 @@ type (
 		// With addition of Mainflux admin data
 		Entries []ChannelEntry `json:"entries"`
 
+		// Devices that have plugged in this channel
+		Devices []string
+
 		Created string `json:"created"`
 		Updated string `json:"updated"`
 

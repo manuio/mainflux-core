@@ -233,18 +233,126 @@ func deleteDevice(w http.ResponseWriter, r *http.Request) {
 	Db.Init()
 	defer Db.Close()
 
-	id := bone.GetValue(r, "device_id")
+	did := bone.GetValue(r, "device_id")
 
-	// Delete device
-	if err := Db.C("devices").Remove(bson.M{"id": id}); err != nil {
+	// Get Device
+	d := models.Device{}
+	err := Db.C("devices").Find(bson.M{"id": did}).One(&d)
+	if err != nil {
 		log.Print(err)
 		w.WriteHeader(http.StatusNotFound)
-		str := `{"response": "not deleted", "id": "` + id + `"}`
+		str := `{"response": "not found", "id": "` + did + `"}`
+		if err != nil {
+			log.Print(err)
+		}
+		io.WriteString(w, str)
+		return
+	}
+
+	// Remove this device from all the channels it was plugged into
+	for _, cid := range d.Channels {
+		// Remove channelID from the Device's `Channels` registry
+		t := time.Now().UTC().Format(time.RFC3339)
+		err := Db.C("channels").Update(bson.M{"id": cid},
+			bson.M{"$pull": bson.M{"devices": did}, "$set": bson.M{"updated": t}})
+		if err != nil {
+			log.Print(err)
+			w.WriteHeader(http.StatusNotFound)
+			str := `{"response": "cannot unplug channel ` + cid + ` for device ` + did + `"}`
+			io.WriteString(w, str)
+			return
+		}
+	}
+
+	// Delete device
+	if err := Db.C("devices").Remove(bson.M{"id": did}); err != nil {
+		log.Print(err)
+		w.WriteHeader(http.StatusNotFound)
+		str := `{"response": "not deleted", "id": "` + did + `"}`
 		io.WriteString(w, str)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	str := `{"response": "deleted", "id": "` + id + `"}`
+	str := `{"response": "deleted", "id": "` + did + `"}`
+	io.WriteString(w, str)
+}
+
+// plugDevice function
+// Plugs given list of channle into device - i.e. creates a
+// connection between device and list of devices provided
+func plugDevice(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	if len(data) > 0 {
+		var body map[string]interface{}
+		if err := json.Unmarshal(data, &body); err != nil {
+			panic(err)
+		}
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
+		str := `{"response": "no data provided"}`
+		io.WriteString(w, str)
+		return
+	}
+
+	/**
+	if validateJsonSchema("channel", body) != true {
+		println("Invalid schema")
+		w.WriteHeader(http.StatusBadRequest)
+		str := `{"response": "invalid json schema in request"}`
+		io.WriteString(w, str)
+		return
+	}
+	**/
+
+	Db := db.MgoDb{}
+	Db.Init()
+	defer Db.Close()
+
+	did := bone.GetValue(r, "device_id")
+
+	var channels []string
+	if err := json.Unmarshal(data, &channels); err != nil {
+		panic(err)
+	}
+
+	for _, cid := range channels {
+		// Timestamp
+		t := time.Now().UTC().Format(time.RFC3339)
+		// Append channelID to the Device's `Channels` registry
+		if err := Db.C("channels").Update(bson.M{"id": cid},
+			bson.M{"$addToSet": bson.M{"device": did},
+				"$set": bson.M{"updated": t}}); err != nil {
+			log.Print(err)
+			w.WriteHeader(http.StatusNotFound)
+			str := `{"response": "cannot plug channel ` + cid + ` into device ` + did + `"}`
+			io.WriteString(w, str)
+			return
+		}
+
+	}
+
+	/** Append channel list to channel's Channels[] */
+	colQuerier := bson.M{"id": did}
+	// Timestamp
+	t := time.Now().UTC().Format(time.RFC3339)
+	// Append entry to exiting array
+	change := bson.M{"$push": bson.M{"channels": bson.M{"$each": channels}}, "$set": bson.M{"updated": t}}
+	if err := Db.C("devices").Update(colQuerier, change); err != nil {
+		log.Print(err)
+		w.WriteHeader(http.StatusNotFound)
+		str := `{"response": "cannot plug channels into device ` + did + `"}`
+		io.WriteString(w, str)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	str := `{"response": "deleted", "id": "` + did + `"}`
 	io.WriteString(w, str)
 }
