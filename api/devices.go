@@ -289,6 +289,7 @@ func plugDevice(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	/**
 	if len(data) > 0 {
 		var body map[string]interface{}
 		if err := json.Unmarshal(data, &body); err != nil {
@@ -300,6 +301,7 @@ func plugDevice(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, str)
 		return
 	}
+	*/
 
 	/**
 	if validateJsonSchema("channel", body) != true {
@@ -327,7 +329,7 @@ func plugDevice(w http.ResponseWriter, r *http.Request) {
 		t := time.Now().UTC().Format(time.RFC3339)
 		// Append channelID to the Device's `Channels` registry
 		if err := Db.C("channels").Update(bson.M{"id": cid},
-			bson.M{"$addToSet": bson.M{"device": did},
+			bson.M{"$addToSet": bson.M{"devices": did},
 				"$set": bson.M{"updated": t}}); err != nil {
 			log.Print(err)
 			w.WriteHeader(http.StatusNotFound)
@@ -353,6 +355,6 @@ func plugDevice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	str := `{"response": "deleted", "id": "` + did + `"}`
+	str := `{"response": "plugged", "id": "` + did + `"}`
 	io.WriteString(w, str)
 }

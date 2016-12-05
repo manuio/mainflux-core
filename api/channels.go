@@ -425,6 +425,7 @@ func plugChannel(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	/**
 	if len(data) > 0 {
 		var body map[string]interface{}
 		if err := json.Unmarshal(data, &body); err != nil {
@@ -436,6 +437,7 @@ func plugChannel(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, str)
 		return
 	}
+	*/
 
 	/**
 	if validateJsonSchema("channel", body) != true {
@@ -489,6 +491,6 @@ func plugChannel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	str := `{"response": "deleted", "id": "` + cid + `"}`
+	str := `{"response": "plugged", "id": "` + cid + `"}`
 	io.WriteString(w, str)
 }
