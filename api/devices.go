@@ -358,3 +358,83 @@ func plugDevice(w http.ResponseWriter, r *http.Request) {
 	str := `{"response": "plugged", "id": "` + did + `"}`
 	io.WriteString(w, str)
 }
+
+// unplugDevice function
+// Unlugs given device from a list of channels - i.e. removes
+// connection between device and list of channels provided
+func plugChannel(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	/**
+	if len(data) > 0 {
+		var body map[string]interface{}
+		if err := json.Unmarshal(data, &body); err != nil {
+			panic(err)
+		}
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
+		str := `{"response": "no data provided"}`
+		io.WriteString(w, str)
+		return
+	}
+	*/
+
+	/**
+	if validateJsonSchema("channel", body) != true {
+		println("Invalid schema")
+		w.WriteHeader(http.StatusBadRequest)
+		str := `{"response": "invalid json schema in request"}`
+		io.WriteString(w, str)
+		return
+	}
+	**/
+
+	Db := db.MgoDb{}
+	Db.Init()
+	defer Db.Close()
+
+	did := bone.GetValue(r, "device_id")
+
+	var channels []string
+	if err := json.Unmarshal(data, &channels); err != nil {
+		panic(err)
+	}
+
+	for _, cid := range channels {
+		// Remove cid from the Device's `Channels` registry
+		t := time.Now().UTC().Format(time.RFC3339)
+		err := Db.C("channels").Update(bson.M{"id": cid},
+			bson.M{"$pull": bson.M{"devices": did}, "$set": bson.M{"updated": t}})
+		if err != nil {
+			log.Print(err)
+			w.WriteHeader(http.StatusNotFound)
+			str := `{"response": "cannot unplug device ` + did + ` from channel ` + cid + `"}`
+			io.WriteString(w, str)
+			return
+		}
+
+	}
+
+	/** Remove channel list from devices's Channels[] */
+	colQuerier := bson.M{"id": did}
+	// Timestamp
+	t := time.Now().UTC().Format(time.RFC3339)
+	// Remove entry from exiting array
+	change := bson.M{"$pull": bson.M{"channels": bson.M{"$each": channels}}, "$set": bson.M{"updated": t}}
+	if err := Db.C("devices").Update(colQuerier, change); err != nil {
+		log.Print(err)
+		w.WriteHeader(http.StatusNotFound)
+		str := `{"response": "not unplugged", "id": "` + did + `"}`
+		io.WriteString(w, str)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	str := `{"response": "uplugged", "id": "` + did + `"}`
+	io.WriteString(w, str)
+}
