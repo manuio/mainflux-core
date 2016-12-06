@@ -38,6 +38,7 @@ func HTTPServer(cfg config.Config) {
 	mux.Delete("/devices/:device_id", http.HandlerFunc(deleteDevice))
 
 	mux.Post("/devices/:device_id/plug", http.HandlerFunc(plugDevice))
+	mux.Post("/devices/:device_id/unplug", http.HandlerFunc(unplugDevice))
 
 	// Channels
 	mux.Post("/channels", http.HandlerFunc(createChannel))
@@ -49,6 +50,7 @@ func HTTPServer(cfg config.Config) {
 	mux.Delete("/channels/:channel_id", http.HandlerFunc(deleteChannel))
 
 	mux.Post("/channels/:channel_id/plug", http.HandlerFunc(plugChannel))
+	mux.Post("/channels/:channel_id/unplug", http.HandlerFunc(unplugChannel))
 
 	/**
 	 * Server

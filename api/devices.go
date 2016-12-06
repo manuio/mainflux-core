@@ -340,12 +340,12 @@ func plugDevice(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	/** Append channel list to channel's Channels[] */
+	/** Add channel list to device's Channels[] */
 	colQuerier := bson.M{"id": did}
 	// Timestamp
 	t := time.Now().UTC().Format(time.RFC3339)
 	// Append entry to exiting array
-	change := bson.M{"$push": bson.M{"channels": bson.M{"$each": channels}}, "$set": bson.M{"updated": t}}
+	change := bson.M{"$addToSet": bson.M{"channels": bson.M{"$each": channels}}, "$set": bson.M{"updated": t}}
 	if err := Db.C("devices").Update(colQuerier, change); err != nil {
 		log.Print(err)
 		w.WriteHeader(http.StatusNotFound)
@@ -425,7 +425,7 @@ func unplugDevice(w http.ResponseWriter, r *http.Request) {
 	// Timestamp
 	t := time.Now().UTC().Format(time.RFC3339)
 	// Remove entry from exiting array
-	change := bson.M{"$pull": bson.M{"channels": bson.M{"$each": channels}}, "$set": bson.M{"updated": t}}
+	change := bson.M{"$pull": bson.M{"channels": bson.M{"$in": channels}}, "$set": bson.M{"updated": t}}
 	if err := Db.C("devices").Update(colQuerier, change); err != nil {
 		log.Print(err)
 		w.WriteHeader(http.StatusNotFound)
