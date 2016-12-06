@@ -362,7 +362,7 @@ func plugDevice(w http.ResponseWriter, r *http.Request) {
 // unplugDevice function
 // Unlugs given device from a list of channels - i.e. removes
 // connection between device and list of channels provided
-func plugChannel(w http.ResponseWriter, r *http.Request) {
+func unplugDevice(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	data, err := ioutil.ReadAll(r.Body)
