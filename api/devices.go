@@ -251,7 +251,7 @@ func deleteDevice(w http.ResponseWriter, r *http.Request) {
 
 	// Remove this device from all the channels it was plugged into
 	for _, cid := range d.Channels {
-		// Remove channelID from the Device's `Channels` registry
+		// Remove did from the Channels's `Devices` registry
 		t := time.Now().UTC().Format(time.RFC3339)
 		err := Db.C("channels").Update(bson.M{"id": cid},
 			bson.M{"$pull": bson.M{"devices": did}, "$set": bson.M{"updated": t}})
