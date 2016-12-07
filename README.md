@@ -28,7 +28,7 @@ $GOBIN/mainflux-core
 If you are new to Go, more information about setting-up environment and fetching Mainflux code can be found [here](https://github.com/mainflux/mainflux-core-doc/blob/master/goenv.md).
 
 ### Documentation
-Development documentation can be found on our [Mainflux GitHub Wiki](https://github.com/Mainflux/mainflux/wiki).
+Development documentation can be found [here](http://mainflux.io).
 
 ### Community
 #### Mailing list
