@@ -10,21 +10,14 @@ package api
 
 import (
 	"net/http"
-	"strconv"
-
-	"github.com/mainflux/mainflux-core/config"
 
 	"github.com/go-zoo/bone"
 )
 
 // HTTPServer function
-func HTTPServer(cfg config.Config) {
-
+func HTTPServer() *bone.Mux {
 	mux := bone.New()
 
-	/**
-	 * Routes
-	 */
 	// Status
 	mux.Get("/status", http.HandlerFunc(getStatus))
 
@@ -52,8 +45,5 @@ func HTTPServer(cfg config.Config) {
 	mux.Post("/channels/:channel_id/plug", http.HandlerFunc(plugChannel))
 	mux.Post("/channels/:channel_id/unplug", http.HandlerFunc(unplugChannel))
 
-	/**
-	 * Server
-	 */
-	http.ListenAndServe(cfg.HTTPHost+":"+strconv.Itoa(cfg.HTTPPort), mux)
+	return mux
 }

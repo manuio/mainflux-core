@@ -6,45 +6,42 @@
  * See the included LICENSE file for more details.
  */
 
-package api
+package api_test
 
 import (
+	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
 	"testing"
-
-	"github.com/mainflux/mainflux-core/config"
 )
 
-func TestStatus(t *testing.T) {
-
-	// Config
-	var cfg config.Config
-	cfg.Parse()
-
-	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
-	// pass 'nil' as the third parameter.
-	req, err := http.NewRequest("GET", "/status", nil)
-	if err != nil {
-		t.Fatal(err)
+func TestGetStatus(t *testing.T) {
+	cases := []struct {
+		body string
+		code int
+	}{
+		{`{"running": true}`, 200},
 	}
 
-	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
-	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(getStatus)
+	url := ts.URL + "/status"
 
-	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
-	// directly and pass in our Request and ResponseRecorder.
-	handler.ServeHTTP(rr, req)
+	for i, c := range cases {
+		res, err := http.Get(url)
+		if err != nil {
+			t.Errorf("case %d: %s", i+1, err.Error())
+		}
 
-	// Check the status code is what we expect.
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
-	}
+		if res.StatusCode != c.code {
+			t.Errorf("case %d: expected status %d got %d", i+1, c.code, res.StatusCode)
+		}
 
-	// Check the response body is what we expect.
-	expected := `{"running": true}`
-	if rr.Body.String() != expected {
-		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
+		body, err := ioutil.ReadAll(res.Body)
+		res.Body.Close()
+		if err != nil {
+			t.Fatalf("case %d: %s", i+1, err.Error())
+		}
+
+		if c.body != string(body) {
+			t.Errorf("case %d: expected response %s got %s", i+1, c.body, string(body))
+		}
 	}
 }

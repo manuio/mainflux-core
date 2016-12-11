@@ -13,8 +13,6 @@ import (
 	"net/http"
 )
 
-/** == Functions == */
-
 func getStatus(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)

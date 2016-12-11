@@ -11,14 +11,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net/http"
+	"os"
+	"strings"
+
 	"github.com/fatih/color"
 	"github.com/mainflux/mainflux-core/api"
 	"github.com/mainflux/mainflux-core/config"
 	"github.com/mainflux/mainflux-core/db"
-	"os"
-	"runtime"
-	"strconv"
-	"strings"
 )
 
 var usageStr = `
@@ -125,14 +125,12 @@ func main() {
 	mqc.MqttSub(cfg)
 
 	// Serve HTTP
-	go api.HTTPServer(cfg)
+	httpHost := fmt.Sprintf("%s:%d", cfg.HTTPHost, cfg.HTTPPort)
+	http.ListenAndServe(httpHost, api.HTTPServer())
 
 	// Print banner
 	color.Cyan(banner)
-	color.Cyan("Magic happens on port " + strconv.Itoa(cfg.HTTPPort))
-
-	/** Keep main() runnig */
-	runtime.Goexit()
+	color.Cyan(fmt.Sprintf("Magic happens on port %d", cfg.HTTPPort))
 }
 
 var banner = `
