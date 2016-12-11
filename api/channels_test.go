@@ -8,8 +8,54 @@
 
 package api_test
 
-import "testing"
+import (
+	"fmt"
+	"net/http"
+	"strings"
+	"testing"
+)
 
 func TestCreateChannel(t *testing.T) {
-	// TODO: add test code
+	cases := []struct {
+		body   string
+		header string
+		code   int
+	}{
+		{"", "api-key", http.StatusCreated},
+		{"invalid", "api-key", http.StatusBadRequest},
+	}
+
+	url := fmt.Sprintf("%s/channels", ts.URL)
+
+	for i, c := range cases {
+		b := strings.NewReader(c.body)
+
+		req, _ := http.NewRequest("POST", url, b)
+		req.Header.Set("Authorization", c.header)
+		req.Header.Set("Content-Type", "application/json")
+
+		cli := &http.Client{}
+		res, err := cli.Do(req)
+		defer res.Body.Close()
+
+		if err != nil {
+			t.Errorf("case %d: %s", i+1, err.Error())
+		}
+
+		if res.StatusCode != c.code {
+			t.Errorf("case %d: expected status %d, got %d", i+1, c.code, res.StatusCode)
+		}
+
+		if res.StatusCode == http.StatusCreated {
+			location := res.Header.Get("Location")
+
+			if len(location) == 0 {
+				t.Errorf("case %d: expected 'Location' to be set", i+1)
+			}
+
+			if !strings.HasPrefix(location, "/channels/") {
+				t.Errorf("case %d: invalid 'Location' %s", i+1, location)
+			}
+		}
+	}
 }
