@@ -39,75 +39,52 @@ type (
 	}
 )
 
-/** == Functions == */
-
 // createChannel function
 func createChannel(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
-	data, err := ioutil.ReadAll(r.Body)
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		panic(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
-	if len(data) > 0 {
-		var body map[string]interface{}
-		if err := json.Unmarshal(data, &body); err != nil {
-			panic(err)
+	c := models.Channel{}
+	if len(body) > 0 {
+		if err := json.Unmarshal(body, &c); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
 	}
 
-	/**
-	if validateJsonSchema("channel", body) != true {
-		println("Invalid schema")
-		w.WriteHeader(http.StatusBadRequest)
-		str := `{"response": "invalid json schema in request"}`
-		io.WriteString(w, str)
-		return
-	}
-	**/
+	// TODO: validate model
 
-	// Init new Mongo session
-	// and get the "channels" collection
-	// from this new session
+	ts := time.Now().UTC().Format(time.RFC3339)
+	c.Created, c.Updated = ts, ts
+	c.ID = uuid.NewV4().String()
+	c.Owner = ""
+	c.Visibility = "private"
+
 	Db := db.MgoDb{}
 	Db.Init()
 	defer Db.Close()
 
-	c := models.Channel{Visibility: "private", Owner: ""}
-	if len(data) > 0 {
-		if err := json.Unmarshal(data, &c); err != nil {
-			panic(err)
-		}
-	}
-
-	// Creating UUID Version 4
-	uuid := uuid.NewV4()
-	fmt.Println(uuid.String())
-
-	c.ID = uuid.String()
-
-	// Timestamp
-	t := time.Now().UTC().Format(time.RFC3339)
-
 	// Insert Channel
-	c.Created, c.Updated = t, t
 	if err := Db.C("channels").Insert(c); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		str := `{"response": "cannot create channel"}`
-		io.WriteString(w, str)
 		return
 	}
 
 	// Publish on NATS
-	hdr := r.Header.Get("Authorization")
-	msg := `{"type": "channel", "id":"` + c.ID + `", "owner": "` + hdr + `"}`
-	NatsConn.Publish("core-auth", []byte(msg))
+	go func() {
+		hdr := r.Header.Get("Authorization")
+		msg := `{"type": "channel", "id":"` + c.ID + `", "owner": "` + hdr + `"}`
+		NatsConn.Publish("core-auth", []byte(msg))
+	}()
 
 	// Send RSP
-	w.WriteHeader(http.StatusOK)
-	str := `{"response": "created", "id": "` + c.ID + `"}`
-	io.WriteString(w, str)
+	w.Header().Set("Location", fmt.Sprintf("/channels/", c.ID))
+	w.WriteHeader(http.StatusCreated)
 }
 
 // getChannels function

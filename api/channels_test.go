@@ -6,45 +6,56 @@
  * See the included LICENSE file for more details.
  */
 
-package api
+package api_test
 
 import (
+	"fmt"
 	"net/http"
-	"net/http/httptest"
+	"strings"
 	"testing"
-
-	"github.com/mainflux/mainflux-core/config"
 )
 
-func TestChannels(t *testing.T) {
-
-	// Config
-	var cfg config.Config
-	cfg.Parse()
-
-	// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
-	// pass 'nil' as the third parameter.
-	req, err := http.NewRequest("GET", "/status", nil)
-	if err != nil {
-		t.Fatal(err)
+func TestCreateChannel(t *testing.T) {
+	cases := []struct {
+		body   string
+		header string
+		code   int
+	}{
+		{"", "api-key", http.StatusCreated},
+		{"invalid", "api-key", http.StatusBadRequest},
 	}
 
-	// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
-	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(getStatus)
+	url := fmt.Sprintf("%s/channels", ts.URL)
 
-	// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
-	// directly and pass in our Request and ResponseRecorder.
-	handler.ServeHTTP(rr, req)
+	for i, c := range cases {
+		b := strings.NewReader(c.body)
 
-	// Check the status code is what we expect.
-	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
-	}
+		req, _ := http.NewRequest("POST", url, b)
+		req.Header.Set("Authorization", c.header)
+		req.Header.Set("Content-Type", "application/json")
 
-	// Check the response body is what we expect.
-	expected := `{"running": true}`
-	if rr.Body.String() != expected {
-		t.Errorf("handler returned unexpected body: got %v want %v", rr.Body.String(), expected)
+		cli := &http.Client{}
+		res, err := cli.Do(req)
+		defer res.Body.Close()
+
+		if err != nil {
+			t.Errorf("case %d: %s", i+1, err.Error())
+		}
+
+		if res.StatusCode != c.code {
+			t.Errorf("case %d: expected status %d, got %d", i+1, c.code, res.StatusCode)
+		}
+
+		if res.StatusCode == http.StatusCreated {
+			location := res.Header.Get("Location")
+
+			if len(location) == 0 {
+				t.Errorf("case %d: expected 'Location' to be set", i+1)
+			}
+
+			if !strings.HasPrefix(location, "/channels/") {
+				t.Errorf("case %d: invalid 'Location' %s", i+1, location)
+			}
+		}
 	}
 }
