@@ -124,13 +124,13 @@ func main() {
 	//Sub to everything coming on all channels of all devices
 	mqc.MqttSub(cfg)
 
-	// Serve HTTP
-	httpHost := fmt.Sprintf("%s:%d", cfg.HTTPHost, cfg.HTTPPort)
-	http.ListenAndServe(httpHost, api.HTTPServer())
-
 	// Print banner
 	color.Cyan(banner)
 	color.Cyan(fmt.Sprintf("Magic happens on port %d", cfg.HTTPPort))
+
+	// Serve HTTP
+	httpHost := fmt.Sprintf("%s:%d", cfg.HTTPHost, cfg.HTTPPort)
+	http.ListenAndServe(httpHost, api.HTTPServer())
 }
 
 var banner = `

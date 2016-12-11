@@ -20,7 +20,6 @@ var (
 
 func InitNats(host string, port int) error {
 	/** Connect to NATS broker */
-	println(host, port)
 	var err error
 	NatsConn, err = nats.Connect("nats://" + host + ":" + strconv.Itoa(port))
 	if err != nil {
