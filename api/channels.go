@@ -83,7 +83,7 @@ func createChannel(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	// Send RSP
-	w.Header().Set("Location", fmt.Sprintf("/channels/", c.ID))
+	w.Header().Set("Location", fmt.Sprintf("/channels/%s", c.ID))
 	w.WriteHeader(http.StatusCreated)
 }
 

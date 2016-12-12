@@ -83,7 +83,9 @@ type (
 	//
 	// Channels are tightly connected to MQTT topics - one channel ID corresponds to one topic.
 	Channel struct {
-		ID string `json:"id"`
+		ID          string `json:"id"`
+		Name        string `json:"name"`
+		Description string `json: "description"`
 
 		// Visibility:
 		// - private
