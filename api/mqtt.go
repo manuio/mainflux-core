@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -16,11 +17,18 @@ type (
 		Opts   *mqtt.ClientOptions
 		Client mqtt.Client
 	}
+
+	MqttMsg struct {
+		Topic     string
+		Publisher string
+		Payload   []byte
+	}
 )
 
 var (
 	// MqttClient is used in HTTP server to communicate HTTP value updates/requests
-	mqttClient mqtt.Client
+	mqttClient       mqtt.Client
+	mainfluxCoreUUID string
 )
 
 //define a function for the default message handler
@@ -28,10 +36,18 @@ var msgHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) 
 	fmt.Printf("TOPIC: %s\n", msg.Topic())
 	fmt.Printf("MSG: %s\n", msg.Payload())
 
-	s := strings.Split(msg.Topic(), "/")
+	m := MqttMsg{}
+	if len(msg.Payload()) > 0 {
+		if err := json.Unmarshal(msg.Payload(), &m); err != nil {
+			println("Can not decode MQTT msg")
+			return
+		}
+	}
+
+	s := strings.Split(m.Topic, "/")
 	channelID := s[len(s)-1]
-	publisher := "TEST_PUBLISHER"
-	writeMessage(publisher, channelID, msg.Payload())
+
+	writeMessage(m.Publisher, channelID, m.Payload)
 }
 
 // MqttSub function - we subscribe to topic `mainflux/channels/#` (no trailing `/`)
@@ -39,7 +55,16 @@ func (mqc *MqttConn) MqttSub(cfg config.Config) {
 	// Create a ClientOptions struct setting the broker address, clientid, turn
 	// off trace output and set the default message handler
 	mqc.Opts = mqtt.NewClientOptions().AddBroker("tcp://" + cfg.MQTTHost + ":" + strconv.Itoa(cfg.MQTTPort))
-	mqc.Opts.SetClientID("mainflux-core")
+
+	// A UUID is a 16-octet (128-bit) number.
+	// In its canonical form, a UUID is represented by 32 lowercase hexadecimal digits,
+	// displayed in five groups separated by hyphens, in the form 8-4-4-4-12 for a
+	// total of 36 characters (32 alphanumeric characters and four hyphens).
+	//
+	// For example:
+	// 123e4567-e89b-12d3-a456-426655440000
+	mainfluxCoreUUID = "12345678-1234-1234-1234-123456789012"
+	mqc.Opts.SetClientID(mainfluxCoreUUID)
 	mqc.Opts.SetDefaultPublishHandler(msgHandler)
 
 	//create and start a client using the above ClientOptions
@@ -52,7 +77,7 @@ func (mqc *MqttConn) MqttSub(cfg config.Config) {
 	// at a maximum qos of zero, wait for the receipt to confirm the subscription
 	// Topic is in the form:
 	// mainflux/channels/#
-	if token := mqc.Client.Subscribe("mainflux/channels/#", 0, nil); token.Wait() && token.Error() != nil {
+	if token := mqc.Client.Subscribe("mainflux/system/messages", 0, nil); token.Wait() && token.Error() != nil {
 		fmt.Println(token.Error())
 	}
 
