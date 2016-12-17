@@ -19,9 +19,9 @@ type (
 	}
 
 	MqttMsg struct {
-		Topic     string
-		Publisher string
-		Payload   []byte
+		Topic     string `json:"topic"`
+		Publisher string `json:"publisher"`
+		Payload   []byte `json:"payload"`
 	}
 )
 

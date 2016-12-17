@@ -103,7 +103,16 @@ func sendMessage(w http.ResponseWriter, r *http.Request) {
 	// Publish the channel update.
 	// This will be catched by the MQTT main client (subscribed to all channel topics)
 	// and then written in the DB in the MQTT handler
-	token := mqttClient.Publish("mainflux/channels/"+cid, 0, false, string(data))
+	m := MqttMsg{}
+	m.Topic = "mainflux/channels/" + cid
+	m.Publisher = mainfluxCoreUUID
+	m.Payload = data
+
+	b, err := json.Marshal(m)
+	if err != nil {
+		log.Print(err)
+	}
+	token := mqttClient.Publish("mainflux/core/pub", 0, false, b)
 	token.Wait()
 
 	// Send back response to HTTP client
