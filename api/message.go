@@ -31,7 +31,7 @@ import (
 // writeMessage function
 // Writtes message into DB.
 // Can be called via various protocols.
-func writeMessage(device_id string, channel_id string, data []byte) {
+func writeMessage(publisher string, channel_id string, data []byte) {
 
 	Db := db.MgoDb{}
 	Db.Init()
@@ -65,7 +65,7 @@ func writeMessage(device_id string, channel_id string, data []byte) {
 
 		// Fill-in Mainflux stuff
 		m.Channel = channel_id
-		m.Publisher = device_id
+		m.Publisher = publisher
 		m.Timestamp = t
 
 		// Insert message in DB

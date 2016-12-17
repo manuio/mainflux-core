@@ -30,8 +30,8 @@ var msgHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) 
 
 	s := strings.Split(msg.Topic(), "/")
 	channelID := s[len(s)-1]
-	deviceID := "TEST_DEVICE_ID"
-	writeMessage(deviceID, channelID, msg.Payload())
+	publisher := "TEST_PUBLISHER"
+	writeMessage(publisher, channelID, msg.Payload())
 }
 
 // MqttSub function - we subscribe to topic `mainflux/channels/#` (no trailing `/`)
@@ -39,7 +39,7 @@ func (mqc *MqttConn) MqttSub(cfg config.Config) {
 	// Create a ClientOptions struct setting the broker address, clientid, turn
 	// off trace output and set the default message handler
 	mqc.Opts = mqtt.NewClientOptions().AddBroker("tcp://" + cfg.MQTTHost + ":" + strconv.Itoa(cfg.MQTTPort))
-	mqc.Opts.SetClientID("mainflux")
+	mqc.Opts.SetClientID("mainflux-core")
 	mqc.Opts.SetDefaultPublishHandler(msgHandler)
 
 	//create and start a client using the above ClientOptions
