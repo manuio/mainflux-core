@@ -45,5 +45,8 @@ func HTTPServer() *bone.Mux {
 	mux.Post("/channels/:channel_id/plug", http.HandlerFunc(plugChannel))
 	mux.Post("/channels/:channel_id/unplug", http.HandlerFunc(unplugChannel))
 
+	mux.Post("/channels/:channel_id/msg", http.HandlerFunc(sendMessage))
+	mux.Get("/channels/:channel_id/msg", http.HandlerFunc(getMessage))
+
 	return mux
 }

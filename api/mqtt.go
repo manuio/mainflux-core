@@ -29,8 +29,9 @@ var msgHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) 
 	fmt.Printf("MSG: %s\n", msg.Payload())
 
 	s := strings.Split(msg.Topic(), "/")
-	chanID := s[len(s)-1]
-	writeChannel(chanID, msg.Payload())
+	channelID := s[len(s)-1]
+	deviceID := "TEST_DEVICE_ID"
+	writeMessage(deviceID, channelID, msg.Payload())
 }
 
 // MqttSub function - we subscribe to topic `mainflux/channels/#` (no trailing `/`)

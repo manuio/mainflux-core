@@ -21,8 +21,6 @@ import (
 	"github.com/satori/go.uuid"
 	"gopkg.in/mgo.v2/bson"
 
-	"github.com/cisco/senml"
-
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -89,6 +87,8 @@ func createChannel(w http.ResponseWriter, r *http.Request) {
 
 // getChannels function
 func getChannels(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+
 	Db := db.MgoDb{}
 	Db.Init()
 	defer Db.Close()
@@ -96,7 +96,7 @@ func getChannels(w http.ResponseWriter, r *http.Request) {
 	// Get fileter values from parameters:
 	// - climit = count limit, limits number of returned `channel` elements
 	// - vlimit = value limit, limits number of values within the channel
-	var climit, vlimit int
+	var climit int
 	var err error
 	s := r.URL.Query().Get("climit")
 	if len(s) == 0 {
@@ -112,29 +112,13 @@ func getChannels(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	s = r.URL.Query().Get("vlimit")
-	if len(s) == 0 {
-		// Set default limit to -100
-		vlimit = -100
-	} else {
-		vlimit, err = strconv.Atoi(s)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			str := `{"response": "wrong value limit"}`
-			io.WriteString(w, str)
-			return
-		}
-	}
-
 	// Query DB
 	results := []models.Channel{}
 	if err := Db.C("channels").Find(nil).
-		Select(bson.M{"values": bson.M{"$slice": vlimit}}).
 		Sort("-_id").Limit(climit).All(&results); err != nil {
 		log.Print(err)
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	res, err := json.Marshal(results)
 	if err != nil {
@@ -153,25 +137,8 @@ func getChannel(w http.ResponseWriter, r *http.Request) {
 
 	id := bone.GetValue(r, "channel_id")
 
-	var vlimit int
-	var err error
-	s := r.URL.Query().Get("vlimit")
-	if len(s) == 0 {
-		// Set default limit to -5
-		vlimit = -100
-	} else {
-		vlimit, err = strconv.Atoi(s)
-		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			str := `{"response": "wrong limit"}`
-			io.WriteString(w, str)
-			return
-		}
-	}
-
 	result := models.Channel{}
 	if err := Db.C("channels").Find(bson.M{"id": id}).
-		Select(bson.M{"values": bson.M{"$slice": vlimit}}).
 		One(&result); err != nil {
 		log.Print(err)
 		w.WriteHeader(http.StatusNotFound)
@@ -188,122 +155,6 @@ func getChannel(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, string(res))
 }
 
-// Removes all the base items and expands records to have items that include
-// what previosly in base iterms. Convets relative times to absoltue times.
-// Only Base Name is omitted and added to every record alonside with the "n"
-// So we can have distinct Base Name and Name for querying database.
-func normalizeEntries(senml senml.SenML) []models.ChannelEntry {
-	var bname string = ""
-	var btime float64 = 0
-	var bunit string = ""
-	//var ver = 5
-	var ret []models.ChannelEntry
-
-	var totalRecords int = 0
-	for _, r := range senml.Records {
-		if (r.Value != nil) || (len(r.StringValue) > 0) || (r.BoolValue != nil) {
-			totalRecords += 1
-		}
-	}
-
-	ret = make([]models.ChannelEntry, totalRecords)
-	var numRecords = 0
-
-	for _, r := range senml.Records {
-		if r.BaseTime != 0 {
-			btime = r.BaseTime
-		}
-		if len(r.BaseUnit) > 0 {
-			bunit = r.BaseUnit
-		}
-		if len(r.BaseName) > 0 {
-			bname = r.BaseName
-		} else {
-			r.BaseName = bname
-		}
-		r.BaseTime = 0
-		r.BaseUnit = ""
-		r.Time = btime + r.Time
-		if len(r.Unit) == 0 {
-			r.Unit = bunit
-		}
-		//r.BaseVersion = ver
-
-		if r.Time <= 0 {
-			// convert to absolute time
-			var now int64 = time.Now().UnixNano()
-			var t int64 = now / 1000000000.0
-			r.Time = float64(t) + r.Time
-		}
-
-		if (r.Value != nil) || (len(r.StringValue) > 0) || (r.BoolValue != nil) {
-			// Copy SenMLRecord struct to ChannelEntry
-			b, err := json.Marshal(r)
-			if err != nil {
-				log.Print(err)
-			}
-			if err := json.Unmarshal(b, &ret[numRecords]); err != nil {
-			}
-
-			////
-			// Mainflux Stuff
-			////
-			ret[numRecords].Publisher = bname
-			// Timestamp
-			t := time.Now().UTC().Format(time.RFC3339)
-			ret[numRecords].Timestamp = t
-
-			// Go to next record
-			numRecords += 1
-		}
-	}
-
-	return ret
-}
-
-// writeChannel function
-// Generic function that updates the channel value.
-// Can be called via various protocols.
-func writeChannel(id string, data []byte) {
-
-	Db := db.MgoDb{}
-	Db.Init()
-	defer Db.Close()
-
-	s := ChannelWriteStatus{}
-
-	var m senml.SenML
-	var err error
-	if m, err = senml.Decode(data, senml.JSON); err != nil {
-		s.Nb = http.StatusBadRequest
-		s.Str = "Invalid request: SenML can not be decoded"
-		fmt.Println(s.Nb, s.Str)
-		return
-	}
-
-	// Normalize (i.e. resolve) SenMLRecord
-	e := normalizeEntries(m)
-
-	/** Insert entry in DB */
-	colQuerier := bson.M{"id": id}
-	// Timestamp
-	t := time.Now().UTC().Format(time.RFC3339)
-	// Append entry to exiting array
-	change := bson.M{"$push": bson.M{"entries": bson.M{"$each": e}}, "$set": bson.M{"updated": t}}
-	if err := Db.C("channels").Update(colQuerier, change); err != nil {
-		log.Print(err)
-		s.Nb = http.StatusNotFound
-		s.Str = "Not inserted"
-		fmt.Println(s.Nb, s.Str)
-		return
-	}
-
-	s.Nb = http.StatusOK
-	s.Str = "Updated"
-
-	println(s.Str)
-}
-
 // updateChannel function
 func updateChannel(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -312,31 +163,37 @@ func updateChannel(w http.ResponseWriter, r *http.Request) {
 	Db.Init()
 	defer Db.Close()
 
-	data, err := ioutil.ReadAll(r.Body)
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		panic(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
-	if len(data) == 0 {
-		w.WriteHeader(http.StatusBadRequest)
-		str := `{"response": "no data provided"}`
+	c := models.Channel{}
+	if len(body) > 0 {
+		if err := json.Unmarshal(body, &c); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+	}
+
+	id := bone.GetValue(r, "channel_id")
+	// Timestamp
+	t := time.Now().UTC().Format(time.RFC3339)
+	c.Updated = t
+
+	colQuerier := bson.M{"id": id}
+	change := bson.M{"$set": c}
+	if err := Db.C("channels").Update(colQuerier, change); err != nil {
+		log.Print(err)
+		w.WriteHeader(http.StatusNotFound)
+		str := `{"response": "not updated", "id": "` + id + `"}`
 		io.WriteString(w, str)
 		return
 	}
 
-	id := bone.GetValue(r, "channel_id")
-
-	// Publish the channel update.
-	// This will be catched by the MQTT main client (subscribed to all channel topics)
-	// and then written in the DB in the MQTT handler
-	token := mqttClient.Publish("mainflux/channels/"+id, 0, false, string(data))
-	token.Wait()
-
-	// Send back response to HTTP client
-	// We have accepted the request and published it over MQTT,
-	// but we do not know if it will be executed or not (MQTT is not req-reply protocol)
-	w.WriteHeader(http.StatusAccepted)
-	str := `{"response": "channel update published"}`
+	w.WriteHeader(http.StatusOK)
+	str := `{"response": "updated", "id": "` + id + `"}`
 	io.WriteString(w, str)
 }
 
@@ -353,7 +210,6 @@ func deleteChannel(w http.ResponseWriter, r *http.Request) {
 	// Get channel
 	c := models.Channel{}
 	if err := Db.C("channels").Find(bson.M{"id": cid}).
-		Select(bson.M{"entries": bson.M{"$slice": 1}}).
 		One(&c); err != nil {
 		log.Print(err)
 		w.WriteHeader(http.StatusNotFound)
