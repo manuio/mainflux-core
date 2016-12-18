@@ -120,7 +120,7 @@ func sendMessage(w http.ResponseWriter, r *http.Request) {
 	// We have accepted the request and published it over MQTT,
 	// but we do not know if it will be executed or not (MQTT is not req-reply protocol)
 	w.WriteHeader(http.StatusAccepted)
-	str := `{"response": "channel update published"}`
+	str := `{"response": "message sent"}`
 	io.WriteString(w, str)
 }
 
