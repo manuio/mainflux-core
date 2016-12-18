@@ -15,9 +15,7 @@ For professional deployments Mainflux is usually combined with [Mainflux Authent
 Mainflux Auth Server also provides user accounts and device and application access control with simple customizable scheme based on scoped JWTs.
 
 ### Install/Deploy
-Mainflux Core uses [MongoDB](https://www.mongodb.com/), so insure that it is installed on your system. You will also need MQTT broker running on default port 1883 - for example [Mosquitto](https://mosquitto.org/).
-
-> N.B. Professional Mainflux deployments use [Aedes](https://github.com/mcollina/aedes) - [high performance](http://www.nearform.com/nodecrunch/performance-reaching-ludicrous-speed/) MQTT broker written in NodeJS. The way it is used can be seen from [docker-compose.yml](docker-compose.yml)
+Mainflux Core uses [MongoDB](https://www.mongodb.com/), so insure that it is installed on your system. You will also need to run [NATS](https://github.com/nats-io/gnatsd). Finally, [Mainflux MQTT broker](https://github.com/mainflux/mainflux-mqtt) needs to be running also.
 
 Installing Mainflux is trivial [`go get`](https://golang.org/cmd/go/):
 ```bash
