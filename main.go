@@ -117,12 +117,7 @@ func main() {
 	db.InitMongo(cfg.MongoHost, cfg.MongoPort, cfg.MongoDatabase)
 
 	// NATS
-	api.InitNats(cfg.NatsHost, cfg.NatsPort)
-
-	// MQTT
-	mqc := new(api.MqttConn)
-	//Sub to everything coming on all channels of all devices
-	mqc.MqttSub(cfg)
+	api.NatsInit(cfg.NatsHost, cfg.NatsPort)
 
 	// Print banner
 	color.Cyan(banner)

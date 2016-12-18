@@ -100,20 +100,20 @@ func sendMessage(w http.ResponseWriter, r *http.Request) {
 
 	cid := bone.GetValue(r, "channel_id")
 
-	// Publish the channel update.
-	// This will be catched by the MQTT main client (subscribed to all channel topics)
-	// and then written in the DB in the MQTT handler
+	// Publish message on MQTT via NATS
 	m := MqttMsg{}
 	m.Topic = "mainflux/channels/" + cid
-	m.Publisher = mainfluxCoreUUID
+	m.Publisher = "GET_PUBLISHER_FROM_AUTH_HEADER"
 	m.Payload = data
 
 	b, err := json.Marshal(m)
 	if err != nil {
 		log.Print(err)
 	}
-	token := mqttClient.Publish("mainflux/core/pub", 0, false, b)
-	token.Wait()
+	NatsConn.Publish("mainflux/core/mqtt", b)
+
+	// Write the message in DB
+	writeMessage(m.Publisher, cid, data)
 
 	// Send back response to HTTP client
 	// We have accepted the request and published it over MQTT,

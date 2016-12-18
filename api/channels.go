@@ -77,7 +77,7 @@ func createChannel(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		hdr := r.Header.Get("Authorization")
 		msg := `{"type": "channel", "id":"` + c.ID + `", "owner": "` + hdr + `"}`
-		NatsConn.Publish("core-auth", []byte(msg))
+		NatsConn.Publish("mainflux/core/auth", []byte(msg))
 	}()
 
 	// Send RSP
