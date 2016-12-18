@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/mainflux/mainflux-core/db"
@@ -133,8 +134,40 @@ func getMessage(w http.ResponseWriter, r *http.Request) {
 
 	cid := bone.GetValue(r, "channel_id")
 
+	// Get fileter values from parameters:
+	// - start_time = messages from this moment. UNIX time format.
+	// - end_time = messages to this moment. UNIX time format.
+	var st float64
+	var et float64
+	var err error
+	var s string
+	s = r.URL.Query().Get("start_time")
+	if len(s) == 0 {
+		st = 0
+	} else {
+		st, err = strconv.ParseFloat(s, 64)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			str := `{"response": "wrong start_time format"}`
+			io.WriteString(w, str)
+			return
+		}
+	}
+	s = r.URL.Query().Get("end_time")
+	if len(s) == 0 {
+		et = float64(time.Now().Unix())
+	} else {
+		et, err = strconv.ParseFloat(s, 64)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			str := `{"response": "wrong end_time format"}`
+			io.WriteString(w, str)
+			return
+		}
+	}
+
 	results := []models.Message{}
-	if err := Db.C("messages").Find(bson.M{"channel": cid}).
+	if err := Db.C("messages").Find(bson.M{"channel": cid, "time": bson.M{"$gt": st, "$lt": et}}).
 		All(&results); err != nil {
 		log.Print(err)
 		w.WriteHeader(http.StatusNotFound)
