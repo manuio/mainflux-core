@@ -11,9 +11,6 @@ ENV MONGO_PORT 27017
 ENV NATS_HOST nats
 ENV NATS_PORT 4222
 
-ENV MQTT_HOST mainflux-mqtt
-ENV MQTT_PORT 1883
-
 ###
 # Install
 ###
@@ -38,7 +35,6 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
 # Run main command with dockerize
 ###
 CMD dockerize -wait tcp://$MONGO_HOST:$MONGO_PORT \
-				-wait tcp://$MQTT_HOST:$MQTT_PORT \
 				-wait tcp://$NATS_HOST:$NATS_PORT \
 				-timeout 10s /go/bin/mainflux-core /etc/mainflux/core/config.toml
 
