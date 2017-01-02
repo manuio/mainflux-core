@@ -17,3 +17,6 @@ import:
 - package: gopkg.in/mgo.v2
   subpackages:
   - bson
+testImport:
+- package: github.com/ory-am/dockertest
+  version: ^3.0.4
