@@ -18,8 +18,8 @@ import (
 	"github.com/mainflux/mainflux-core/api"
 	mfdb "github.com/mainflux/mainflux-core/db"
 
-	"github.com/ory-am/dockertest"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/ory-am/dockertest.v2"
 )
 
 var ts *httptest.Server

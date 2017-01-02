@@ -18,5 +18,5 @@ import:
   subpackages:
   - bson
 testImport:
-- package: github.com/ory-am/dockertest
-  version: ^3.0.4
+- package: gopkg.in/ory-am/dockertest.v2
+  version: ^2.2.3
