@@ -64,13 +64,13 @@ func TestMain(m *testing.M) {
 
 	code := m.Run()
 
+	// Close database connection.
+	db.Close()
+
 	// You can't defer this because os.Exit doesn't care for defer
 	if err := pool.Purge(resource); err != nil {
 		log.Fatalf("Could not purge resource: %s", err)
 	}
-
-	// Close database connection.
-	db.Close()
 
 	// Exit tests
 	os.Exit(code)
