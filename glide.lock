@@ -1,5 +1,5 @@
-hash: b78f3f1e129176019047b8687884973622a5c23ca49e1af01d8e7a61ed5f1b43
-updated: 2017-01-02T23:00:25.964067032+01:00
+hash: 46ac7ad3520e461389af6a18677ef709e9e8d9dfc3e06b4093c05bd5cf3abf41
+updated: 2017-01-03T23:24:12.492377459+01:00
 imports:
 - name: github.com/BurntSushi/toml
   version: bbd5bb678321a0d6e58f1099321dfa73391c1b6f
@@ -8,7 +8,7 @@ imports:
 - name: github.com/codegangsta/negroni
   version: fde5e16d32adc7ad637e9cd9ad21d4ebc6192535
 - name: github.com/fatih/color
-  version: dea9d3a26a087187530244679c1cfb3a42937794
+  version: 34e4ee095d12986a2cef5ddb9aeb3b8cfcfea17c
 - name: github.com/go-zoo/bone
   version: fd0aebc74e908868b09ac140fb5a53cb363884c1
 - name: github.com/mattn/go-colorable
@@ -40,6 +40,7 @@ imports:
   version: d75a52659825e75fff6158388dddc6a5b04f9ba5
   subpackages:
   - unix
+  - windows
 - name: gopkg.in/mgo.v2
   version: 3f83fa5005286a7fe593b055f0d7771a7dce4655
   subpackages:
@@ -48,19 +49,65 @@ imports:
   - internal/sasl
   - internal/scram
 testImports:
-- name: github.com/go-errors/errors
-  version: 8fa88b06e5974e97fbf9899a7f86a344bfd1f105
-- name: github.com/go-sql-driver/mysql
-  version: 0b58b37b664c21f3010e836f1b931e1d0b0b0685
-- name: github.com/lib/pq
-  version: 22cb3e4c487ce6242e2b03369219e5631eed1221
+- name: github.com/Azure/go-ansiterm
+  version: fa152c58bc15761d0200cb75fe958b89a9d4888e
   subpackages:
-  - oid
-- name: github.com/ory-am/common
-  version: 40fb0fd742247e3b54ebd9ebed09c35185663ba3
+  - winterm
+- name: github.com/cenk/backoff
+  version: 32cd0c5b3aef12c76ed64aaf678f6c79736be7dc
+- name: github.com/docker/docker
+  version: 88862e707affccf9c46347361689b2ffef39dc5c
   subpackages:
-  - env
-- name: github.com/pborman/uuid
-  version: a97ce2ca70fa5a848076093f05e639a89ca34d06
-- name: gopkg.in/ory-am/dockertest.v2
-  version: edb9d9444e6868c1b1e279098b628e7b8e6f0714
+  - api/types
+  - api/types/blkiodev
+  - api/types/container
+  - api/types/filters
+  - api/types/mount
+  - api/types/network
+  - api/types/registry
+  - api/types/strslice
+  - api/types/swarm
+  - api/types/versions
+  - opts
+  - pkg/archive
+  - pkg/fileutils
+  - pkg/homedir
+  - pkg/idtools
+  - pkg/ioutils
+  - pkg/jsonlog
+  - pkg/jsonmessage
+  - pkg/longpath
+  - pkg/pools
+  - pkg/promise
+  - pkg/stdcopy
+  - pkg/system
+  - pkg/term
+  - pkg/term/windows
+- name: github.com/docker/go-connections
+  version: eb315e36415380e7c2fdee175262560ff42359da
+  subpackages:
+  - nat
+- name: github.com/docker/go-units
+  version: e30f1e79f3cd72542f2026ceec18d3bd67ab859c
+- name: github.com/fsouza/go-dockerclient
+  version: 4a934a8fd3ec3d4f84d9dcd8b47e7b277918c366
+- name: github.com/hashicorp/go-cleanhttp
+  version: ad28ea4487f05916463e2423a55166280e8254b5
+- name: github.com/Microsoft/go-winio
+  version: 24a3e3d3fc7451805e09d11e11e95d9a0a4f205e
+- name: github.com/opencontainers/runc
+  version: c441a2fe0ccfce89d5781e894de783727d6743ee
+  subpackages:
+  - libcontainer/system
+  - libcontainer/user
+- name: github.com/pkg/errors
+  version: 645ef00459ed84a119197bfb8d8205042c6df63d
+- name: github.com/Sirupsen/logrus
+  version: 881bee4e20a5d11a6a88a5667c6f292072ac1963
+- name: golang.org/x/net
+  version: 69d4b8aa71caaaa75c3dfc11211d1be495abec7c
+  subpackages:
+  - context
+  - context/ctxhttp
+- name: gopkg.in/ory-am/dockertest.v3
+  version: e4828e807797a7641fcd457716870dfc2f9e82ff

@@ -9,17 +9,17 @@
 package api_test
 
 import (
+	"fmt"
 	"log"
 	"net/http/httptest"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/mainflux/mainflux-core/api"
 	mfdb "github.com/mainflux/mainflux-core/db"
 
 	"gopkg.in/mgo.v2"
-	"gopkg.in/ory-am/dockertest.v2"
+	"gopkg.in/ory-am/dockertest.v3"
 )
 
 var ts *httptest.Server
@@ -30,38 +30,48 @@ func TestMain(m *testing.M) {
 		err error
 	)
 
-	c, err := dockertest.ConnectToMongoDB(15, time.Millisecond*500, func(url string) bool {
-		db, err = mgo.Dial(url)
-		if err != nil {
-			return false
-		}
+	// uses a sensible default on windows (tcp/http) and linux/osx (socket)
+	pool, err := dockertest.NewPool("")
+	if err != nil {
+		log.Fatalf("Could not connect to docker: %s", err)
+	}
 
-		if err = db.Ping(); err != nil {
-			return false
+	// pulls an image, creates a container based on it and runs it
+	resource, err := pool.Run("mongo", "3.4", nil)
+	if err != nil {
+		log.Fatalf("Could not start resource: %s", err)
+	}
+
+	// exponential backoff-retry, because the application in the container might not be ready to accept connections yet
+	if err := pool.Retry(func() error {
+		var err error
+		db, err = mgo.Dial(fmt.Sprintf("localhost:%s", resource.GetPort("27017/tcp")))
+		if err != nil {
+			return err
 		}
 
 		mfdb.SetMainSession(db)
 		mfdb.SetMainDb("mainflux_test")
-		return true
-	})
 
-	if err != nil {
-		log.Fatalf("Could not connect to database: %s", err)
+		return db.Ping()
+	}); err != nil {
+		log.Fatalf("Could not connect to docker: %s", err)
 	}
 
 	// Start the HTTP server
 	ts = httptest.NewServer(api.HTTPServer())
 	defer ts.Close()
 
-	// Run tests
-	result := m.Run()
+	code := m.Run()
+
+	// You can't defer this because os.Exit doesn't care for defer
+	if err := pool.Purge(resource); err != nil {
+		log.Fatalf("Could not purge resource: %s", err)
+	}
 
 	// Close database connection.
 	db.Close()
 
-	// Clean up image.
-	c.KillRemove()
-
-	// Exit tests.
-	os.Exit(result)
+	// Exit tests
+	os.Exit(code)
 }
