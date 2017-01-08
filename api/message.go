@@ -101,10 +101,13 @@ func sendMessage(w http.ResponseWriter, r *http.Request) {
 
 	cid := bone.GetValue(r, "channel_id")
 
+	// Publisher ID header
+	hdr := r.Header.Get("Client-ID")
+
 	// Publish message on MQTT via NATS
 	m := MqttMsg{}
 	m.Topic = "mainflux/channels/" + cid
-	m.Publisher = "GET_PUBLISHER_FROM_AUTH_HEADER"
+	m.Publisher = hdr
 	m.Payload = data
 
 	b, err := json.Marshal(m)
