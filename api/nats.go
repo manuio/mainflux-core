@@ -32,6 +32,10 @@ var (
 func msgHandler(nm *nats.Msg) {
 	fmt.Printf("Received a message: %s\n", string(nm.Data))
 
+	// Re-publish it
+	NatsConn.Publish("mainflux/core/out", nm.Data)
+
+	// And write it into the database
 	m := NatsMsg{}
 	if len(nm.Data) > 0 {
 		if err := json.Unmarshal(nm.Data, &m); err != nil {
