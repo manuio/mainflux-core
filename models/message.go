@@ -71,6 +71,7 @@ type (
 		// Mainflux stuff
 		////
 		Publisher string `json:"publisher"`
+		Protocol  string `json:"protocol"`
 		Timestamp string `json:"timestamp"`
 
 		// Channel to which this message belongs

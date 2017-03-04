@@ -32,7 +32,7 @@ import (
 // writeMessage function
 // Writtes message into DB.
 // Can be called via various protocols.
-func writeMessage(publisher string, channel_id string, data []byte) {
+func writeMessage(nm NatsMsg) {
 
 	Db := db.MgoDb{}
 	Db.Init()
@@ -40,7 +40,7 @@ func writeMessage(publisher string, channel_id string, data []byte) {
 
 	var s senml.SenML
 	var err error
-	if s, err = senml.Decode(data, senml.JSON); err != nil {
+	if s, err = senml.Decode(nm.Payload, senml.JSON); err != nil {
 		return
 	}
 
@@ -65,8 +65,9 @@ func writeMessage(publisher string, channel_id string, data []byte) {
 		}
 
 		// Fill-in Mainflux stuff
-		m.Channel = channel_id
-		m.Publisher = publisher
+		m.Channel = nm.Channel
+		m.Publisher = nm.Publisher
+		m.Protocol = nm.Protocol
 		m.Timestamp = t
 
 		// Insert message in DB
@@ -105,19 +106,20 @@ func sendMessage(w http.ResponseWriter, r *http.Request) {
 	hdr := r.Header.Get("Client-ID")
 
 	// Publish message on MQTT via NATS
-	m := MqttMsg{}
-	m.Topic = "mainflux/channels/" + cid
+	m := NatsMsg{}
+	m.Channel = cid
 	m.Publisher = hdr
+	m.Protocol = "http"
 	m.Payload = data
 
 	b, err := json.Marshal(m)
 	if err != nil {
 		log.Print(err)
 	}
-	NatsConn.Publish("mainflux/core/mqtt", b)
+	NatsConn.Publish("mainflux/core/out", b)
 
 	// Write the message in DB
-	writeMessage(m.Publisher, cid, data)
+	writeMessage(m)
 
 	// Send back response to HTTP client
 	// We have accepted the request and published it over MQTT,
