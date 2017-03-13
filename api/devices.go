@@ -31,6 +31,9 @@ import (
 
 // createDevice function
 func createDevice(w http.ResponseWriter, r *http.Request) {
+	// Set up defaults and pick up new values from user-provided JSON
+	d := models.Device{}
+
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
 	data, err := ioutil.ReadAll(r.Body)
@@ -39,44 +42,13 @@ func createDevice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(data) > 0 {
-		var body map[string]interface{}
-		if err := json.Unmarshal(data, &body); err != nil {
-			panic(err)
+		err, str := validateCreateDeviceSchema(data)
+		if (err) {
+			w.WriteHeader(http.StatusBadRequest)
+			io.WriteString(w, str)
+			return
 		}
 
-		// Validate JSON schema
-		for k := range body {
-			switch k {
-				case "id":
-					w.WriteHeader(http.StatusBadRequest)
-					str := `{"response": "invalid request:` +
-					       `device id is read-only"}`
-					io.WriteString(w, str)
-					return
-				case "created":
-					w.WriteHeader(http.StatusBadRequest)
-					str := `{"response": "invalid request:` +
-					       `created is read-only"}`
-					io.WriteString(w, str)
-					return
-				case "channels":
-					w.WriteHeader(http.StatusBadRequest)
-					str := `{"response": "invalid request:` +
-					       `channels is read-only"}`
-					io.WriteString(w, str)
-					return
-			}
-		}
-	}
-
-	// Init MongoDB
-	Db := db.MgoDb{}
-	Db.Init()
-	defer Db.Close()
-
-	// Set up defaults and pick up new values from user-provided JSON
-	d := models.Device{Name: "Some Name", Online: false}
-	if len(data) > 0 {
 		if err := json.Unmarshal(data, &d); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			str := `{"response": "cannot decode body"}`
@@ -92,6 +64,11 @@ func createDevice(w http.ResponseWriter, r *http.Request) {
 	// Timestamp
 	t := time.Now().UTC().Format(time.RFC3339)
 	d.Created, d.Updated = t, t
+
+	// Init MongoDB
+	Db := db.MgoDb{}
+	Db.Init()
+	defer Db.Close()
 
 	// Insert Device
 	if err := Db.C("devices").Insert(d); err != nil {
@@ -174,6 +151,13 @@ func updateDevice(w http.ResponseWriter, r *http.Request) {
 		str := `{"response": "no data provided"}`
 		io.WriteString(w, str)
 		return
+	} else {
+		err, str := validateCreateDeviceSchema(data)
+		if (err) {
+			w.WriteHeader(http.StatusBadRequest)
+			io.WriteString(w, str)
+			return
+		}
 	}
 
 	var body map[string]interface{}
@@ -181,34 +165,13 @@ func updateDevice(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	// Validate JSON schema
-	for k := range body {
-		switch k {
-			case "id":
-				w.WriteHeader(http.StatusBadRequest)
-				str := `{"response": "invalid request: device id is read-only"}`
-				io.WriteString(w, str)
-				return
-			case "created":
-				w.WriteHeader(http.StatusBadRequest)
-				str := `{"response": "invalid request: created is read-only"}`
-				io.WriteString(w, str)
-				return
-			case "channels":
-				w.WriteHeader(http.StatusBadRequest)
-				str := `{"response": "invalid request: channels is read-only"}`
-				io.WriteString(w, str)
-				return
-		}
-	}
+	// Timestamp
+	body["updated"] = time.Now().UTC().Format(time.RFC3339)
 
 	// Init MongoDB
 	Db := db.MgoDb{}
 	Db.Init()
 	defer Db.Close()
-
-	// Timestamp
-	body["updated"] = time.Now().UTC().Format(time.RFC3339)
 
 	// Device id
 	id := bone.GetValue(r, "device_id")
