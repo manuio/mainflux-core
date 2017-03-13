@@ -23,6 +23,9 @@ func TestCreateChannel(t *testing.T) {
 	}{
 		{"", "api-key", http.StatusCreated},
 		{"invalid", "api-key", http.StatusBadRequest},
+		{`{"id":"0000"}`, "api-key", http.StatusBadRequest},
+		{`{"created":"0000"}`, "api-key", http.StatusBadRequest},
+		{`{"devices":"0000"}`, "api-key", http.StatusBadRequest},
 	}
 
 	url := fmt.Sprintf("%s/channels", ts.URL)
