@@ -10,7 +10,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"time"
 
@@ -67,7 +66,6 @@ func createDevice(w http.ResponseWriter, r *http.Request) {
 	d := models.Device{Name: "Some Name", Online: false}
 	if len(data) > 0 {
 		if err := json.Unmarshal(data, &d); err != nil {
-			println("Cannot decode!")
 			w.WriteHeader(http.StatusBadRequest)
 			str := `{"response": "cannot decode body"}`
 			io.WriteString(w, str)
@@ -77,8 +75,6 @@ func createDevice(w http.ResponseWriter, r *http.Request) {
 
 	// Creating UUID Version 4
 	uuid := uuid.NewV4()
-	fmt.Println(uuid.String())
-
 	d.ID = uuid.String()
 
 	// Timestamp
@@ -158,7 +154,6 @@ func updateDevice(w http.ResponseWriter, r *http.Request) {
 
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		println("HERE")
 		panic(err)
 	}
 
@@ -174,41 +169,37 @@ func updateDevice(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	/*
-		if validateJsonSchema("device", body) != true {
-			println("Invalid schema")
-			w.WriteHeader(http.StatusBadRequest)
-			str := `{"response": "invalid json schema in request"}`
-			io.WriteString(w, str)
-			return
+	// Validate JSON schema
+	for k := range body {
+		switch k {
+			case "id":
+				w.WriteHeader(http.StatusBadRequest)
+				str := `{"response": "invalid request: device id is read-only"}`
+				io.WriteString(w, str)
+				return
+			case "created":
+				w.WriteHeader(http.StatusBadRequest)
+				str := `{"response": "invalid request: created is read-only"}`
+				io.WriteString(w, str)
+				return
+			case "channels":
+				w.WriteHeader(http.StatusBadRequest)
+				str := `{"response": "invalid request: channels is read-only"}`
+				io.WriteString(w, str)
+				return
 		}
-	*/
+	}
 
+	// Init MongoDB
 	Db := db.MgoDb{}
 	Db.Init()
 	defer Db.Close()
 
-	id := bone.GetValue(r, "device_id")
-
-	// Check if someone is trying to change "id" key
-	// and protect us from this
-	if _, ok := body["id"]; ok {
-		w.WriteHeader(http.StatusBadRequest)
-		str := `{"response": "invalid request: device id is read-only"}`
-		io.WriteString(w, str)
-		return
-	}
-	if _, ok := body["created"]; ok {
-		println("Error: can not change device")
-		w.WriteHeader(http.StatusBadRequest)
-		str := `{"response": "invalid request: 'created' is read-only"}`
-		io.WriteString(w, str)
-		return
-	}
-
 	// Timestamp
-	t := time.Now().UTC().Format(time.RFC3339)
-	body["updated"] = t
+	body["updated"] = time.Now().UTC().Format(time.RFC3339)
+
+	// Device id
+	id := bone.GetValue(r, "device_id")
 
 	colQuerier := bson.M{"id": id}
 	change := bson.M{"$set": body}
