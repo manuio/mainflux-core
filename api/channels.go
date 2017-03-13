@@ -47,15 +47,41 @@ func createChannel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var b map[string]interface{}
 	c := models.Channel{}
 	if len(body) > 0 {
 		if err := json.Unmarshal(body, &c); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+
+		if err := json.Unmarshal(body, &b); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
 	}
 
 	// TODO: validate model
+	// Validate JSON schema
+	for k := range b {
+		switch k {
+			case "id":
+				w.WriteHeader(http.StatusBadRequest)
+				str := `{"response": "invalid request: device id is read-only"}`
+				io.WriteString(w, str)
+				return
+			case "created":
+				w.WriteHeader(http.StatusBadRequest)
+				str := `{"response": "invalid request: created is read-only"}`
+				io.WriteString(w, str)
+				return
+			case "devices":
+				w.WriteHeader(http.StatusBadRequest)
+				str := `{"response": "invalid request: devices is read-only"}`
+				io.WriteString(w, str)
+				return
+		}
+	}
 
 	ts := time.Now().UTC().Format(time.RFC3339)
 	c.Created, c.Updated = ts, ts
@@ -177,10 +203,37 @@ func updateChannel(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	id := bone.GetValue(r, "channel_id")
+	var b map[string]interface{}
+	if err := json.Unmarshal(body, &b); err != nil {
+		panic(err)
+	}
+
+	// Validate JSON schema
+	for k := range b {
+		switch k {
+			case "id":
+				w.WriteHeader(http.StatusBadRequest)
+				str := `{"response": "invalid request: device id is read-only"}`
+				io.WriteString(w, str)
+				return
+			case "created":
+				w.WriteHeader(http.StatusBadRequest)
+				str := `{"response": "invalid request: created is read-only"}`
+				io.WriteString(w, str)
+				return
+			case "devices":
+				w.WriteHeader(http.StatusBadRequest)
+				str := `{"response": "invalid request: channels is read-only"}`
+				io.WriteString(w, str)
+				return
+		}
+	}
+
 	// Timestamp
-	t := time.Now().UTC().Format(time.RFC3339)
-	c.Updated = t
+	c.Updated = time.Now().UTC().Format(time.RFC3339)
+
+	// Channel id
+	id := bone.GetValue(r, "channel_id")
 
 	colQuerier := bson.M{"id": id}
 	change := bson.M{"$set": c}
