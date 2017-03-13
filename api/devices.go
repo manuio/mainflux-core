@@ -42,7 +42,7 @@ func createDevice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(data) > 0 {
-		err, str := validateCreateDeviceSchema(data)
+		err, str := validateDeviceSchema(data)
 		if (err) {
 			w.WriteHeader(http.StatusBadRequest)
 			io.WriteString(w, str)
@@ -152,7 +152,7 @@ func updateDevice(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, str)
 		return
 	} else {
-		err, str := validateCreateDeviceSchema(data)
+		err, str := validateDeviceSchema(data)
 		if (err) {
 			w.WriteHeader(http.StatusBadRequest)
 			io.WriteString(w, str)

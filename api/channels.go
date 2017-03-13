@@ -39,56 +39,43 @@ type (
 
 // createChannel function
 func createChannel(w http.ResponseWriter, r *http.Request) {
+	c := models.Channel{}
+
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 
-	body, err := ioutil.ReadAll(r.Body)
+	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	var b map[string]interface{}
-	c := models.Channel{}
-	if len(body) > 0 {
-		if err := json.Unmarshal(body, &c); err != nil {
+	if len(data) > 0 {
+		err, str := validateChannelSchema(data)
+		if (err) {
 			w.WriteHeader(http.StatusBadRequest)
+			io.WriteString(w, str)
 			return
 		}
 
-		if err := json.Unmarshal(body, &b); err != nil {
+		if err := json.Unmarshal(data, &c); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
+			str := `{"response": "cannot decode body"}`
+			io.WriteString(w, str)
 			return
 		}
 	}
 
-	// TODO: validate model
-	// Validate JSON schema
-	for k := range b {
-		switch k {
-			case "id":
-				w.WriteHeader(http.StatusBadRequest)
-				str := `{"response": "invalid request: device id is read-only"}`
-				io.WriteString(w, str)
-				return
-			case "created":
-				w.WriteHeader(http.StatusBadRequest)
-				str := `{"response": "invalid request: created is read-only"}`
-				io.WriteString(w, str)
-				return
-			case "devices":
-				w.WriteHeader(http.StatusBadRequest)
-				str := `{"response": "invalid request: devices is read-only"}`
-				io.WriteString(w, str)
-				return
-		}
-	}
+	// Creating UUID Version 4
+	c.ID = uuid.NewV4().String()
 
+	// Timestamp
 	ts := time.Now().UTC().Format(time.RFC3339)
 	c.Created, c.Updated = ts, ts
-	c.ID = uuid.NewV4().String()
+
 	c.Owner = ""
 	c.Visibility = "private"
 
+	// Init MongoDB
 	Db := db.MgoDb{}
 	Db.Init()
 	defer Db.Close()
@@ -189,54 +176,40 @@ func updateChannel(w http.ResponseWriter, r *http.Request) {
 	Db.Init()
 	defer Db.Close()
 
-	body, err := ioutil.ReadAll(r.Body)
+	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	c := models.Channel{}
-	if len(body) > 0 {
-		if err := json.Unmarshal(body, &c); err != nil {
+	// Validate JSON schema
+	if len(data) == 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		str := `{"response": "no data provided"}`
+		io.WriteString(w, str)
+		return
+	} else {
+		err, str := validateChannelSchema(data)
+		if (err) {
 			w.WriteHeader(http.StatusBadRequest)
+			io.WriteString(w, str)
 			return
 		}
 	}
 
-	var b map[string]interface{}
-	if err := json.Unmarshal(body, &b); err != nil {
+	var body map[string]interface{}
+	if err := json.Unmarshal(data, &body); err != nil {
 		panic(err)
 	}
 
-	// Validate JSON schema
-	for k := range b {
-		switch k {
-			case "id":
-				w.WriteHeader(http.StatusBadRequest)
-				str := `{"response": "invalid request: device id is read-only"}`
-				io.WriteString(w, str)
-				return
-			case "created":
-				w.WriteHeader(http.StatusBadRequest)
-				str := `{"response": "invalid request: created is read-only"}`
-				io.WriteString(w, str)
-				return
-			case "devices":
-				w.WriteHeader(http.StatusBadRequest)
-				str := `{"response": "invalid request: channels is read-only"}`
-				io.WriteString(w, str)
-				return
-		}
-	}
-
 	// Timestamp
-	c.Updated = time.Now().UTC().Format(time.RFC3339)
+	body["updated"] = time.Now().UTC().Format(time.RFC3339)
 
 	// Channel id
 	id := bone.GetValue(r, "channel_id")
 
 	colQuerier := bson.M{"id": id}
-	change := bson.M{"$set": c}
+	change := bson.M{"$set": body}
 	if err := Db.C("channels").Update(colQuerier, change); err != nil {
 		log.Print(err)
 		w.WriteHeader(http.StatusNotFound)

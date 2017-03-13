@@ -45,26 +45,64 @@ func validateJSONSchema(model string, body map[string]interface{}) bool {
 	return true
 }
 
-func validateCreateDeviceSchema(data []byte) (bool, string) {
+func validateDeviceSchema(data []byte) (bool, string) {
 	var body map[string]interface{}
 
 	if err := json.Unmarshal(data, &body); err != nil {
-		str := `{"response": json can't be decoded}`
+		str := `{"response": cannot decode body}`
 		return true, str
 	}
 
 	for k := range body {
 		switch k {
 			case "id":
-				str := `{"response": "invalid request:` +
+				str := `{"response": "invalid request: ` +
 					   `device id is read-only"}`
 				return true, str
 			case "created":
-				str := `{"response": "invalid request:` +
+				str := `{"response": "invalid request: ` +
 					   `created is read-only"}`
 				return true, str
 			case "channels":
-				str := `{"response": "invalid request:` +
+				str := `{"response": "invalid request: ` +
+					   `channels is read-only"}`
+				return true, str
+			case "name":
+				if (len(body[k].(string)) > 20) {
+					str := `{"response": "max name size: 20"}`
+					return true, str
+				}
+				break
+			default :
+				str := `{"response": "invalid request: ` + k +
+					   ` is not a device parameter"}`
+				return true, str
+		}
+	}
+
+	return false, ""
+}
+
+func validateChannelSchema(data []byte) (bool, string) {
+	var body map[string]interface{}
+
+	if err := json.Unmarshal(data, &body); err != nil {
+		str := `{"response": cannot decode body}`
+		return true, str
+	}
+
+	for k := range body {
+		switch k {
+			case "id":
+				str := `{"response": "invalid request: ` +
+					   `device id is read-only"}`
+				return true, str
+			case "created":
+				str := `{"response": "invalid request: ` +
+					   `created is read-only"}`
+				return true, str
+			case "devices":
+				str := `{"response": "invalid request: ` +
 					   `channels is read-only"}`
 				return true, str
 			case "name":
