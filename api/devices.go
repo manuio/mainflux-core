@@ -24,6 +24,7 @@ import (
 	"net/http"
 
 	"github.com/go-zoo/bone"
+
 )
 
 /** == Functions == */
@@ -34,7 +35,6 @@ func createDevice(w http.ResponseWriter, r *http.Request) {
 
 	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		println("HERE")
 		panic(err)
 	}
 
@@ -43,21 +43,33 @@ func createDevice(w http.ResponseWriter, r *http.Request) {
 		if err := json.Unmarshal(data, &body); err != nil {
 			panic(err)
 		}
+
+		// Validate JSON schema
+		for k := range body {
+			switch k {
+				case "id":
+					w.WriteHeader(http.StatusBadRequest)
+					str := `{"response": "invalid request:` +
+					       `device id is read-only"}`
+					io.WriteString(w, str)
+					return
+				case "created":
+					w.WriteHeader(http.StatusBadRequest)
+					str := `{"response": "invalid request:` +
+					       `created is read-only"}`
+					io.WriteString(w, str)
+					return
+				case "channels":
+					w.WriteHeader(http.StatusBadRequest)
+					str := `{"response": "invalid request:` +
+					       `channels is read-only"}`
+					io.WriteString(w, str)
+					return
+			}
+		}
 	}
 
-	/*
-		if validateJsonSchema("device", body) != true {
-			println("Invalid schema")
-			w.WriteHeader(http.StatusBadRequest)
-			str := `{"response": "invalid json schema in request"}`
-			io.WriteString(w, str)
-			return
-		}
-	*/
-
-	// Init new Mongo session
-	// and get the "devices" collection
-	// from this new session
+	// Init MongoDB
 	Db := db.MgoDb{}
 	Db.Init()
 	defer Db.Close()
