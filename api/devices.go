@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"log"
 	"time"
+	"fmt"
 
 	"github.com/mainflux/mainflux-core/db"
 	"github.com/mainflux/mainflux-core/models"
@@ -84,9 +85,8 @@ func createDevice(w http.ResponseWriter, r *http.Request) {
 	NatsConn.Publish("core-auth", []byte(msg))
 
 	// Send RSP
+	w.Header().Set("Location", fmt.Sprintf("/devices/%s", d.ID))
 	w.WriteHeader(http.StatusCreated)
-	str := `{"response": "created", "id": "` + d.ID + `"}`
-	io.WriteString(w, str)
 }
 
 // getDevices function
