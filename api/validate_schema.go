@@ -49,7 +49,7 @@ func validateDeviceSchema(data []byte) (bool, string) {
 	var body map[string]interface{}
 
 	if err := json.Unmarshal(data, &body); err != nil {
-		str := `{"response": cannot decode body}`
+		str := `{"response": "cannot decode body"}`
 		return true, str
 	}
 
@@ -87,7 +87,7 @@ func validateChannelSchema(data []byte) (bool, string) {
 	var body map[string]interface{}
 
 	if err := json.Unmarshal(data, &body); err != nil {
-		str := `{"response": cannot decode body}`
+		str := `{"response": "cannot decode body"}`
 		return true, str
 	}
 
