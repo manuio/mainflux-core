@@ -69,7 +69,13 @@ func validateDeviceSchema(data []byte) (bool, string) {
 				return true, str
 			case "name":
 				if (len(body[k].(string)) > 20) {
-					str := `{"response": "max name size: 20"}`
+					str := `{"response": "max name size 20"}`
+					return true, str
+				}
+				break
+			case "description":
+				if (len(body[k].(string)) > 200) {
+					str := `{"response": "max description size 200"}`
 					return true, str
 				}
 				break
@@ -108,6 +114,12 @@ func validateChannelSchema(data []byte) (bool, string) {
 			case "name":
 				if (len(body[k].(string)) > 20) {
 					str := `{"response": "max name size: 20"}`
+					return true, str
+				}
+				break
+			case "description":
+				if (len(body[k].(string)) > 200) {
+					str := `{"response": "max description size 200"}`
 					return true, str
 				}
 				break
