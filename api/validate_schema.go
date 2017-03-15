@@ -68,14 +68,14 @@ func validateDeviceSchema(data []byte) (bool, string) {
 					   `channels is read-only"}`
 				return true, str
 			case "name":
-				if (len(body[k].(string)) > 20) {
-					str := `{"response": "max name size 20"}`
+				if (len(body[k].(string)) > 32) {
+					str := `{"response": "max name size 32"}`
 					return true, str
 				}
 				break
 			case "description":
-				if (len(body[k].(string)) > 200) {
-					str := `{"response": "max description size 200"}`
+				if (len(body[k].(string)) > 256) {
+					str := `{"response": "max description size 256"}`
 					return true, str
 				}
 				break
@@ -112,14 +112,14 @@ func validateChannelSchema(data []byte) (bool, string) {
 					   `channels is read-only"}`
 				return true, str
 			case "name":
-				if (len(body[k].(string)) > 20) {
-					str := `{"response": "max name size: 20"}`
+				if (len(body[k].(string)) > 32) {
+					str := `{"response": "max name size: 32"}`
 					return true, str
 				}
 				break
 			case "description":
-				if (len(body[k].(string)) > 200) {
-					str := `{"response": "max description size 200"}`
+				if (len(body[k].(string)) > 256) {
+					str := `{"response": "max description size 256"}`
 					return true, str
 				}
 				break
