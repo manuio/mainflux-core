@@ -43,8 +43,7 @@ func createDevice(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(data) > 0 {
-		err, str := validateDeviceSchema(data)
-		if (err) {
+		if err, str := validateDeviceSchema(data); err {
 			w.WriteHeader(http.StatusBadRequest)
 			io.WriteString(w, str)
 			return
@@ -151,13 +150,12 @@ func updateDevice(w http.ResponseWriter, r *http.Request) {
 		str := `{"response": "no data provided"}`
 		io.WriteString(w, str)
 		return
-	} else {
-		err, str := validateDeviceSchema(data)
-		if (err) {
-			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, str)
-			return
-		}
+	}
+
+	if err, str := validateDeviceSchema(data); err {
+		w.WriteHeader(http.StatusBadRequest)
+		io.WriteString(w, str)
+		return
 	}
 
 	var body map[string]interface{}

@@ -50,8 +50,7 @@ func createChannel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(data) > 0 {
-		err, str := validateChannelSchema(data)
-		if (err) {
+		if err, str := validateChannelSchema(data); err {
 			w.WriteHeader(http.StatusBadRequest)
 			io.WriteString(w, str)
 			return
@@ -188,13 +187,12 @@ func updateChannel(w http.ResponseWriter, r *http.Request) {
 		str := `{"response": "no data provided"}`
 		io.WriteString(w, str)
 		return
-	} else {
-		err, str := validateChannelSchema(data)
-		if (err) {
-			w.WriteHeader(http.StatusBadRequest)
-			io.WriteString(w, str)
-			return
-		}
+	}
+
+	if err, str := validateChannelSchema(data); err {
+		w.WriteHeader(http.StatusBadRequest)
+		io.WriteString(w, str)
+		return
 	}
 
 	var body map[string]interface{}
