@@ -14,13 +14,13 @@ import (
 	"github.com/nats-io/go-nats"
 	"log"
 	"strconv"
-	"strings"
 )
 
 type (
-	MqttMsg struct {
-		Topic     string `json:"topic"`
+	NatsMsg struct {
+		Channel   string `json:"channel"`
 		Publisher string `json:"publisher"`
+		Protocol  string `json:"protocol"`
 		Payload   []byte `json:"payload"`
 	}
 )
@@ -29,23 +29,24 @@ var (
 	NatsConn *nats.Conn
 )
 
-func mqttHandler(nm *nats.Msg) {
+func msgHandler(nm *nats.Msg) {
 	fmt.Printf("Received a message: %s\n", string(nm.Data))
 
-	m := MqttMsg{}
+	// Re-publish it
+	NatsConn.Publish("mainflux/core/out", nm.Data)
+
+	// And write it into the database
+	m := NatsMsg{}
 	if len(nm.Data) > 0 {
 		if err := json.Unmarshal(nm.Data, &m); err != nil {
-			println("Can not decode MQTT msg")
+			println("Can not decode NATS msg")
 			return
 		}
 	}
 
-	s := strings.Split(m.Topic, "/")
-	channelID := s[len(s)-1]
-
 	println("Calling writeMessage()")
-	fmt.Println(m.Publisher, channelID, m.Payload)
-	writeMessage(m.Publisher, channelID, m.Payload)
+	fmt.Println(m.Publisher, m.Protocol, m.Channel, m.Payload)
+	writeMessage(m)
 }
 
 func NatsInit(host string, port int) error {
@@ -57,7 +58,7 @@ func NatsInit(host string, port int) error {
 	}
 
 	// Create MQTT bridge
-	NatsConn.Subscribe("mainflux/mqtt/core", mqttHandler)
+	NatsConn.Subscribe("mainflux/core/in", msgHandler)
 
 	return err
 }
