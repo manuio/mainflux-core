@@ -16,17 +16,31 @@ import (
 )
 
 func TestCreateDevice(t *testing.T) {
+	var n [32 + 1]byte
+	var d [256 + 1]byte
+
 	cases := []struct {
 		body   string
 		header string
 		code   int
 	}{
-		{"",                     "api-key", http.StatusCreated},
-		{`{"name": "test"}`,     "api-key", http.StatusCreated},
-		{"invalid",              "api-key", http.StatusBadRequest},
-		{`{"id": "0000"}`,       "api-key", http.StatusBadRequest},
-		{`{"created": "0000"}`,  "api-key", http.StatusBadRequest},
-		{`{"channels": "0000"}`, "api-key", http.StatusBadRequest},
+		{"",                                 "api-key", http.StatusCreated},
+		{`{"name": "test"}`,                 "api-key", http.StatusCreated},
+		{`{"description": "test"}`,          "api-key", http.StatusCreated},
+		{`{"metadata": {"test": "mTest"}}`,  "api-key", http.StatusCreated},
+		{`{"name": "test",` +
+		 `"metadata": {"m1": "test",` +
+		 `"m2": "test" }}`,                  "api-key", http.StatusCreated},
+
+		{"invalid",                          "api-key", http.StatusBadRequest},
+		{`{"id": "test"}`,                   "api-key", http.StatusBadRequest},
+		{`{"created": "test"}`,              "api-key", http.StatusBadRequest},
+		{`{"channels": "test"}`,             "api-key", http.StatusBadRequest},
+		{`{"metadata": "string"`,            "api-key", http.StatusBadRequest},
+		{`{"connected_at": "0"`,             "api-key", http.StatusBadRequest},
+		{`{"disconnected_at": "0"`,          "api-key", http.StatusBadRequest},
+		{`{"name": "` + string(n[:]) + `"}`, "api-key", http.StatusBadRequest},
+		{`{"description": "` + string(d[:]) + `"}`, "api-key", http.StatusBadRequest},
 	}
 
 	url := fmt.Sprintf("%s/devices", ts.URL)
@@ -50,7 +64,7 @@ func TestCreateDevice(t *testing.T) {
 			t.Errorf("case %d: expected status %d, got %d", i+1, c.code, res.StatusCode)
 		}
 
-		/*if res.StatusCode == http.StatusCreated {
+		if res.StatusCode == http.StatusCreated {
 			location := res.Header.Get("Location")
 
 			if len(location) == 0 {
@@ -60,6 +74,6 @@ func TestCreateDevice(t *testing.T) {
 			if !strings.HasPrefix(location, "/devices/") {
 				t.Errorf("case %d: invalid 'Location' %s", i+1, location)
 			}
-		}*/
+		}
 	}
 }
