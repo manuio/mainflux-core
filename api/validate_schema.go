@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 
 	"encoding/json"
 	"github.com/xeipuuv/gojsonschema"
@@ -45,6 +46,45 @@ func validateJSONSchema(model string, body map[string]interface{}) bool {
 	return true
 }
 
+func validateGeneralSchema(body map[string]interface{}) (bool, string) {
+	for k := range body {
+		switch k {
+			case "id", "updated", "created":
+				str := `{"response": "invalid request: ` + k + ` is read-only"}`
+				return true, str
+			case "name":
+				if (len(body[k].(string)) > 32) {
+					str := `{"response": "max name size 32"}`
+					return true, str
+				}
+				break
+			case "description":
+				if reflect.ValueOf(body[k]).Kind() != reflect.String  {
+					str := `{"response": "` + k +
+					       ` parameter is of type string"}`
+					return true, str
+				}
+				if (len(body[k].(string)) > 256) {
+					str := `{"response": "max description size 256"}`
+					return true, str
+				}
+				break
+			case "metadata":
+				if reflect.ValueOf(body[k]).Kind() != reflect.Map  {
+					str := `{"response": "parameter metadata is of type object"}`
+					return true, str
+				}
+				break
+			default :
+				str := `{"response": "invalid request: ` + k +
+					   ` is not a device parameter"}`
+				return true, str
+		}
+	}
+
+	return false, ""
+}
+
 func validateDeviceSchema(data []byte) (bool, string) {
 	var body map[string]interface{}
 
@@ -55,34 +95,11 @@ func validateDeviceSchema(data []byte) (bool, string) {
 
 	for k := range body {
 		switch k {
-			case "id":
-				str := `{"response": "invalid request: ` +
-					   `device id is read-only"}`
+			case "channels", "connected_at", "disconnected_at", "online":
+				str := `{"response": "invalid request: ` + k + `is read-only"}`
 				return true, str
-			case "created":
-				str := `{"response": "invalid request: ` +
-					   `created is read-only"}`
-				return true, str
-			case "channels":
-				str := `{"response": "invalid request: ` +
-					   `channels is read-only"}`
-				return true, str
-			case "name":
-				if (len(body[k].(string)) > 32) {
-					str := `{"response": "max name size 32"}`
-					return true, str
-				}
-				break
-			case "description":
-				if (len(body[k].(string)) > 256) {
-					str := `{"response": "max description size 256"}`
-					return true, str
-				}
-				break
 			default :
-				str := `{"response": "invalid request: ` + k +
-					   ` is not a device parameter"}`
-				return true, str
+				return validateGeneralSchema(body)
 		}
 	}
 
@@ -99,34 +116,12 @@ func validateChannelSchema(data []byte) (bool, string) {
 
 	for k := range body {
 		switch k {
-			case "id":
-				str := `{"response": "invalid request: ` +
-					   `device id is read-only"}`
+			case "devices", "visibility", "owner":
+				str := `{"response": "invalid request: ` + k + ` is read-only"}`
 				return true, str
-			case "created":
-				str := `{"response": "invalid request: ` +
-					   `created is read-only"}`
-				return true, str
-			case "devices":
-				str := `{"response": "invalid request: ` +
-					   `channels is read-only"}`
-				return true, str
-			case "name":
-				if (len(body[k].(string)) > 32) {
-					str := `{"response": "max name size: 32"}`
-					return true, str
-				}
-				break
-			case "description":
-				if (len(body[k].(string)) > 256) {
-					str := `{"response": "max description size 256"}`
-					return true, str
-				}
-				break
+
 			default :
-				str := `{"response": "invalid request: ` + k +
-					   ` is not a device parameter"}`
-				return true, str
+				return validateGeneralSchema(body)
 		}
 	}
 
