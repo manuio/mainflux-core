@@ -147,8 +147,8 @@ func TestDeleteDevice(t *testing.T) {
 		header string
 		code   int
 	}{
-		{"invalid",  "api-key", http.StatusOK},
-		{"existentTestID",         "api-key", http.StatusNotFound},
+		{"invalid",  "api-key", http.StatusNotFound},
+		{"existentTestID",         "api-key", http.StatusOK},
 	}
 
 	// TODO: use docker_test for DB
