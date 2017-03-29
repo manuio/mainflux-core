@@ -83,6 +83,86 @@ func TestCreateDevice(t *testing.T) {
 	}
 }
 
+func TestGetDevices(t *testing.T) {
+	cases := []struct {
+		header string
+		code   int
+	}{
+		{"api-key", http.StatusOK},
+		{"api-key", http.StatusNotFound},
+	}
+
+	// Init MongoDB (docker_test)
+	Db := db.MgoDb{}
+	Db.Init()
+	defer Db.Close()
+
+	for i, c := range cases {
+		// case 1
+		if i == 0 {
+			// Insert Devices
+			d := models.Device{}
+			d.ID = "testID"
+			Db.C("devices").Insert(d)
+			d.ID = "testID2"
+			Db.C("devices").Insert(d)
+		// case 2
+		} else {
+			Db.C("devices").RemoveAll(nil)
+		}
+
+		url := fmt.Sprintf("%s/devices", ts.URL)
+		cli := &http.Client{}
+		res, err := cli.Get(url)
+		defer res.Body.Close()
+
+		if err != nil {
+			t.Errorf("case %d: %s", i+1, err.Error())
+		}
+
+		if res.StatusCode != c.code {
+			t.Errorf("case %d: expected status %d, got %d", i+1, c.code, res.StatusCode)
+		}
+	}
+}
+
+
+func TestGetDevice(t *testing.T) {
+	cases := []struct {
+		id     string
+		header string
+		code   int
+	}{
+		{"validID",   "api-key", http.StatusOK},
+		{"invalidID", "api-key", http.StatusNotFound},
+	}
+
+	// Init MongoDB (docker_test)
+	Db := db.MgoDb{}
+	Db.Init()
+	defer Db.Close()
+
+	// Insert device with id "existentTestID" in DB
+	d := models.Device{}
+	d.ID = cases[0].id
+	Db.C("devices").Insert(d)
+
+	for i, c := range cases {
+		url := fmt.Sprintf("%s/devices/" + c.id, ts.URL)
+		cli := &http.Client{}
+		res, err := cli.Get(url)
+		defer res.Body.Close()
+
+		if err != nil {
+			t.Errorf("case %d: %s", i+1, err.Error())
+		}
+
+		if res.StatusCode != c.code {
+			t.Errorf("case %d: expected status %d, got %d", i+1, c.code, res.StatusCode)
+		}
+	}
+}
+
 func TestUpdateDevice(t *testing.T) {
 	cases := []struct {
 		body   string
@@ -147,8 +227,8 @@ func TestDeleteDevice(t *testing.T) {
 		header string
 		code   int
 	}{
-		{"invalid",  "api-key", http.StatusNotFound},
-		{"existentTestID",         "api-key", http.StatusOK},
+		{"invalid",        "api-key", http.StatusNotFound},
+		{"existentTestID", "api-key", http.StatusOK},
 	}
 
 	// TODO: use docker_test for DB
