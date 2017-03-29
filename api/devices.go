@@ -96,15 +96,21 @@ func getDevices(w http.ResponseWriter, r *http.Request) {
 
 	results := []models.Device{}
 	if err := Db.C("devices").Find(nil).All(&results); err != nil {
-		log.Print(err)
+		w.WriteHeader(http.StatusNotFound)
+		str := `{"response": "` + err.Error() + `"}`
+		io.WriteString(w, str)
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
 	res, err := json.Marshal(results)
 	if err != nil {
-		log.Print(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		str := `{"response": "` + err.Error() + `"}`
+		io.WriteString(w, str)
+		return
 	}
+
+	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, string(res))
 }
 
@@ -121,18 +127,21 @@ func getDevice(w http.ResponseWriter, r *http.Request) {
 	result := models.Device{}
 	err := Db.C("devices").Find(bson.M{"id": id}).One(&result)
 	if err != nil {
-		log.Print(err)
 		w.WriteHeader(http.StatusNotFound)
 		str := `{"response": "not found", "id": "` + id + `"}`
 		io.WriteString(w, str)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
 	res, err := json.Marshal(result)
 	if err != nil {
-		log.Print(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		str := `{"response": "` + err.Error() + `"}`
+		io.WriteString(w, str)
+		return
 	}
+
+	w.WriteHeader(http.StatusOK)
 	io.WriteString(w, string(res))
 }
 
@@ -205,10 +214,7 @@ func deleteDevice(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Print(err)
 		w.WriteHeader(http.StatusNotFound)
-		str := `{"response": "not found", "id": "` + did + `"}`
-		if err != nil {
-			log.Print(err)
-		}
+		str := `{"response": "` + err.Error() + `", "id": "` + did + `"}`
 		io.WriteString(w, str)
 		return
 	}
