@@ -47,4 +47,7 @@ tags
 *.test
 
 # Binary
-mainflux-core
+mainflux-cor
+
+# OS X
+.DS_Store
