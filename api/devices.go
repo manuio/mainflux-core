@@ -96,9 +96,16 @@ func getDevices(w http.ResponseWriter, r *http.Request) {
 
 	results := []models.Device{}
 	if err := Db.C("devices").Find(nil).All(&results); err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusInternalServerError)
 		str := `{"response": "` + err.Error() + `"}`
 		io.WriteString(w, str)
+		return
+	}
+	if len(results) == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		str := `{"response": "no device found"}`
+		io.WriteString(w, str)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
