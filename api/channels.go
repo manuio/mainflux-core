@@ -128,14 +128,27 @@ func getChannels(w http.ResponseWriter, r *http.Request) {
 	results := []models.Channel{}
 	if err := Db.C("channels").Find(nil).
 		Sort("-_id").Limit(climit).All(&results); err != nil {
-		log.Print(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		str := `{"response": "` + err.Error() + `"}`
+		io.WriteString(w, str)
+		return
+	}
+	if len(results) == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		str := `{"response": "no channel found"}`
+		io.WriteString(w, str)
+		return
+	}
+
+	res, err := json.Marshal(results)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		str := `{"response": "` + err.Error() + `"}`
+		io.WriteString(w, str)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	res, err := json.Marshal(results)
-	if err != nil {
-		log.Print(err)
-	}
 	io.WriteString(w, string(res))
 }
 

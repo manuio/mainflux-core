@@ -66,6 +66,86 @@ func TestCreateChannel(t *testing.T) {
 	}
 }
 
+func TestGetChannels(t *testing.T) {
+	cases := []struct {
+		header string
+		code   int
+	}{
+		{"api-key", http.StatusOK},
+		{"api-key", http.StatusNotFound},
+	}
+
+	// Init MongoDB (docker_test)
+	Db := db.MgoDb{}
+	Db.Init()
+	defer Db.Close()
+
+	for i, c := range cases {
+		// case 1
+		if i == 0 {
+			// Insert Devices
+			d := models.Channel{}
+			d.ID = "testID"
+			Db.C("channels").Insert(d)
+			d.ID = "testID2"
+			Db.C("channels").Insert(d)
+		// case 2
+		} else {
+			Db.C("channels").RemoveAll(nil)
+		}
+
+		url := fmt.Sprintf("%s/channels", ts.URL)
+		cli := &http.Client{}
+		res, err := cli.Get(url)
+		defer res.Body.Close()
+
+		if err != nil {
+			t.Errorf("case %d: %s", i+1, err.Error())
+		}
+
+		if res.StatusCode != c.code {
+			t.Errorf("case %d: expected status %d, got %d", i+1, c.code, res.StatusCode)
+		}
+	}
+}
+
+
+func TestGetChannel(t *testing.T) {
+	cases := []struct {
+		id     string
+		header string
+		code   int
+	}{
+		{"validID",   "api-key", http.StatusOK},
+		{"invalidID", "api-key", http.StatusNotFound},
+	}
+
+	// Init MongoDB (docker_test)
+	Db := db.MgoDb{}
+	Db.Init()
+	defer Db.Close()
+
+	// Insert device with id "existentTestID" in DB
+	d := models.Channel{}
+	d.ID = cases[0].id
+	Db.C("channels").Insert(d)
+
+	for i, c := range cases {
+		url := fmt.Sprintf("%s/channels/" + c.id, ts.URL)
+		cli := &http.Client{}
+		res, err := cli.Get(url)
+		defer res.Body.Close()
+
+		if err != nil {
+			t.Errorf("case %d: %s", i+1, err.Error())
+		}
+
+		if res.StatusCode != c.code {
+			t.Errorf("case %d: expected status %d, got %d", i+1, c.code, res.StatusCode)
+		}
+	}
+}
+
 func TestUpdateChannel(t *testing.T) {
 	cases := []struct {
 		body   string
