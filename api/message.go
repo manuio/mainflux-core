@@ -102,6 +102,14 @@ func sendMessage(w http.ResponseWriter, r *http.Request) {
 
 	cid := bone.GetValue(r, "channel_id")
 
+	// check if channel exist
+	if err = Db.C("channels").Find(bson.M{"id": cid}).One(nil); err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		str := `{"response": "not found", "id": "` + cid + `"}`
+		io.WriteString(w, str)
+		return
+	}
+
 	// Publisher ID header
 	hdr := r.Header.Get("Client-ID")
 
@@ -138,6 +146,13 @@ func getMessage(w http.ResponseWriter, r *http.Request) {
 	defer Db.Close()
 
 	cid := bone.GetValue(r, "channel_id")
+
+	if err := Db.C("channels").Find(bson.M{"id": cid}).One(nil); err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		str := `{"response": "not found", "id": "` + cid + `"}`
+		io.WriteString(w, str)
+		return
+	}
 
 	// Get fileter values from parameters:
 	// - start_time = messages from this moment. UNIX time format.
