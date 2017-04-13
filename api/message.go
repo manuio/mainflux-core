@@ -29,6 +29,8 @@ import (
 	"github.com/go-zoo/bone"
 )
 
+var errSenML error
+
 // writeMessage function
 // Writtes message into DB.
 // Can be called via various protocols.
@@ -41,6 +43,7 @@ func writeMessage(nm NatsMsg) {
 	var s senml.SenML
 	var err error
 	if s, err = senml.Decode(nm.Payload, senml.JSON); err != nil {
+		errSenML = err
 		return
 	}
 
@@ -128,6 +131,14 @@ func sendMessage(w http.ResponseWriter, r *http.Request) {
 
 	// Write the message in DB
 	writeMessage(m)
+
+	if errSenML != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		str := `{"response": "` + errSenML.Error() + `"}`
+		io.WriteString(w, str)
+		errSenML = nil
+		return
+	}
 
 	// Send back response to HTTP client
 	// We have accepted the request and published it over MQTT,
