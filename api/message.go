@@ -29,12 +29,10 @@ import (
 	"github.com/go-zoo/bone"
 )
 
-var errSenML error
-
 // writeMessage function
 // Writtes message into DB.
 // Can be called via various protocols.
-func writeMessage(nm NatsMsg) {
+func writeMessage(nm NatsMsg) error {
 
 	Db := db.MgoDb{}
 	Db.Init()
@@ -43,8 +41,7 @@ func writeMessage(nm NatsMsg) {
 	var s senml.SenML
 	var err error
 	if s, err = senml.Decode(nm.Payload, senml.JSON); err != nil {
-		errSenML = err
-		return
+		return err
 	}
 
 	// Normalize (i.e. resolve) SenMLRecord
@@ -60,11 +57,11 @@ func writeMessage(nm NatsMsg) {
 		b, err := json.Marshal(r)
 		if err != nil {
 			log.Print(err)
-			return
+			return err
 		}
 		if err := json.Unmarshal(b, &m); err != nil {
 			log.Print(err)
-			return
+			return err
 		}
 
 		// Fill-in Mainflux stuff
@@ -76,11 +73,12 @@ func writeMessage(nm NatsMsg) {
 		// Insert message in DB
 		if err := Db.C("messages").Insert(m); err != nil {
 			log.Print(err)
-			return
+			return err
 		}
 	}
 
 	fmt.Println("Msg written")
+	return nil
 }
 
 // sendMessage function
@@ -130,13 +128,10 @@ func sendMessage(w http.ResponseWriter, r *http.Request) {
 	NatsConn.Publish("mainflux/core/out", b)
 
 	// Write the message in DB
-	writeMessage(m)
-
-	if errSenML != nil {
+	if err := writeMessage(m); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		str := `{"response": "` + errSenML.Error() + `"}`
+		str := `{"response": "` + err.Error() + `"}`
 		io.WriteString(w, str)
-		errSenML = nil
 		return
 	}
 
